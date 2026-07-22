@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ExternalLink, Github, ArrowUpRight, AlertTriangle, X, Info, Download } from "lucide-react";
+import { ExternalLink, Github, ArrowUpRight, AlertTriangle, X, Info, Download, ChevronLeft, ChevronRight } from "lucide-react";
 
 import { projects } from "../../data/portfolio";
 
@@ -123,6 +123,33 @@ function ProjectCard({ project, index, onOpenWarning }) {
 
 export default function FeaturedWork() {
   const [activeProject, setActiveProject] = useState(null);
+  const scrollRef = useRef(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const checkScroll = () => {
+    if (scrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+      setCanScrollLeft(scrollLeft > 10);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
+    }
+  };
+
+  useEffect(() => {
+    checkScroll();
+    window.addEventListener("resize", checkScroll);
+    return () => window.removeEventListener("resize", checkScroll);
+  }, []);
+
+  const scroll = (direction) => {
+    if (scrollRef.current) {
+      const scrollAmount = window.innerWidth * 0.75; // Roughly one card width
+      scrollRef.current.scrollBy({
+        left: direction === "left" ? -scrollAmount : scrollAmount,
+        behavior: "smooth",
+      });
+    }
+  };
 
   return (
     <section id="work" className="relative px-6 py-20 lg:py-32 w-full">
@@ -133,11 +160,11 @@ export default function FeaturedWork() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[120] flex items-center justify-center md:p-4 bg-void/90 md:bg-void/80 backdrop-blur-md"
+            className="fixed inset-0 z-[80] flex items-center justify-center p-4 pt-20 pb-24 bg-void/90 md:bg-void/80 backdrop-blur-md"
           >
             <motion.div
               layoutId={`project-${activeProject.title}`}
-              className="relative w-full md:max-w-lg p-6 lg:p-8 max-md:pt-12 max-md:h-[100dvh] max-md:rounded-none md:rounded-2xl void-card border-none md:border md:border-white/[0.08] shadow-2xl max-md:overflow-y-auto flex flex-col"
+              className="relative w-full md:max-w-lg p-6 lg:p-8 max-md:pt-12 max-h-[100%] rounded-2xl void-card border border-white/[0.08] shadow-2xl overflow-y-auto flex flex-col"
             >
               <button
                 onClick={() => setActiveProject(null)}
@@ -160,9 +187,9 @@ export default function FeaturedWork() {
 
               <div className="flex items-center gap-4 mb-6">
                 {!activeProject.warningType && !activeProject.isDesktop && (
-                   <div className="hidden md:flex items-center justify-center w-12 h-12 rounded-full shrink-0 bg-white/5 border border-white/10 text-white/60">
-                     <Info className="w-6 h-6" />
-                   </div>
+                  <div className="hidden md:flex items-center justify-center w-12 h-12 rounded-full shrink-0 bg-white/5 border border-white/10 text-white/60">
+                    <Info className="w-6 h-6" />
+                  </div>
                 )}
                 {activeProject.warningType === 'infinity' && (
                   <div className="flex items-center justify-center w-12 h-12 rounded-full shrink-0 bg-red-500/10 border border-red-500/20 text-red-500">
@@ -277,13 +304,16 @@ export default function FeaturedWork() {
       </motion.div>
 
       {/* Container - Horizontal snap on mobile, grid on desktop */}
-      <motion.div
-        variants={container}
-        initial="hidden"
-        whileInView="show"
-        viewport={{ once: true, margin: "-80px" }}
-        className="max-w-6xl mx-auto flex overflow-x-auto snap-x snap-mandatory pb-8 gap-6 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6 md:pb-0 hide-scrollbar"
-      >
+      <div className="relative group/carousel">
+        <motion.div
+          ref={scrollRef}
+          onScroll={checkScroll}
+          variants={container}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: "-80px" }}
+          className="max-w-6xl mx-auto flex max-md:-mx-6 max-md:px-6 overflow-x-auto snap-x snap-mandatory pb-8 gap-6 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6 md:pb-0 hide-scrollbar relative"
+        >
         {projects.map((project, i) => (
           <ProjectCard
             key={project.title}
@@ -292,7 +322,31 @@ export default function FeaturedWork() {
             onOpenWarning={setActiveProject}
           />
         ))}
-      </motion.div>
+        </motion.div>
+
+        {/* Mobile Carousel Navigation Arrows */}
+        <div className="md:hidden">
+          {canScrollLeft && (
+            <button
+              onClick={() => scroll("left")}
+              className="absolute left-0 top-[40%] -translate-y-1/2 -ml-2 w-10 h-10 rounded-full bg-void border border-white/[0.08] shadow-2xl flex items-center justify-center text-white/50 hover:text-accent-emerald transition-colors z-10"
+              aria-label="Scroll left"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+          )}
+          
+          {canScrollRight && (
+            <button
+              onClick={() => scroll("right")}
+              className="absolute right-0 top-[40%] -translate-y-1/2 -mr-2 w-10 h-10 rounded-full bg-void border border-white/[0.08] shadow-2xl flex items-center justify-center text-white/50 hover:text-accent-emerald transition-colors z-10"
+              aria-label="Scroll right"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          )}
+        </div>
+      </div>
     </section>
   );
 }

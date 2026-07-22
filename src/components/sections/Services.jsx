@@ -1,4 +1,6 @@
 import { motion } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { services } from "../../data/portfolio";
 
 const container = {
@@ -17,6 +19,34 @@ const item = {
 };
 
 export default function Services() {
+  const scrollRef = useRef(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const checkScroll = () => {
+    if (scrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+      setCanScrollLeft(scrollLeft > 10);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
+    }
+  };
+
+  useEffect(() => {
+    checkScroll();
+    window.addEventListener("resize", checkScroll);
+    return () => window.removeEventListener("resize", checkScroll);
+  }, []);
+
+  const scroll = (direction) => {
+    if (scrollRef.current) {
+      const scrollAmount = window.innerWidth * 0.85; // Roughly one card width
+      scrollRef.current.scrollBy({
+        left: direction === "left" ? -scrollAmount : scrollAmount,
+        behavior: "smooth",
+      });
+    }
+  };
+
   return (
     <section id="services" className="relative px-6 max-md:py-12 py-20 lg:py-32 w-full">
       {/* Section header */}
@@ -33,24 +63,27 @@ export default function Services() {
         <h2 className="font-display text-4xl sm:text-5xl lg:text-7xl font-bold text-white max-w-3xl leading-[1.15] sm:leading-[1.05]">
           One engineer,
           <br />
-          <span className="text-white/20 inline-block mt-1 sm:mt-0">three surfaces.</span>
+          <span className="text-white/20 mt-1 sm:mt-0 block sm:inline">three surfaces.</span>
         </h2>
       </motion.div>
 
       {/* Asymmetric staggered card grid / Mobile Carousel */}
-      <motion.div
-        variants={container}
-        initial="hidden"
-        whileInView="show"
-        viewport={{ once: true, margin: "-80px" }}
-        className="max-w-6xl mx-auto flex max-md:overflow-x-auto max-md:snap-x max-md:snap-mandatory max-md:pb-6 gap-6 lg:gap-8 md:grid md:grid-cols-2 lg:grid-cols-3 hide-scrollbar"
-      >
+      <div className="relative group/carousel">
+        <motion.div
+          ref={scrollRef}
+          onScroll={checkScroll}
+          variants={container}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: "-80px" }}
+          className="max-w-6xl mx-auto flex max-md:-mx-6 max-md:px-6 max-md:overflow-x-auto max-md:snap-x max-md:snap-mandatory max-md:pb-6 gap-6 lg:gap-8 md:grid md:grid-cols-2 lg:grid-cols-3 hide-scrollbar relative"
+        >
         {services.map(
           ({ icon: Icon, title, description, stack, glowHover, floatDelay, offset }) => (
             <motion.div
               key={title}
               variants={item}
-              className={`${offset} max-md:min-w-[75vw] max-md:snap-center shrink-0`}
+              className={`${offset} max-md:w-[85vw] max-md:snap-center shrink-0`}
             >
               <motion.div
                 whileHover={{ y: -12, transition: { type: "spring", stiffness: 300, damping: 22 } }}
@@ -94,7 +127,31 @@ export default function Services() {
             </motion.div>
           )
         )}
-      </motion.div>
+        </motion.div>
+
+        {/* Mobile Carousel Navigation Arrows */}
+        <div className="md:hidden">
+          {canScrollLeft && (
+            <button
+              onClick={() => scroll("left")}
+              className="absolute left-0 top-1/2 -translate-y-1/2 -ml-2 w-10 h-10 rounded-full bg-void border border-white/[0.08] shadow-2xl flex items-center justify-center text-white/50 hover:text-accent-emerald transition-colors z-10"
+              aria-label="Scroll left"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+          )}
+          
+          {canScrollRight && (
+            <button
+              onClick={() => scroll("right")}
+              className="absolute right-0 top-1/2 -translate-y-1/2 -mr-2 w-10 h-10 rounded-full bg-void border border-white/[0.08] shadow-2xl flex items-center justify-center text-white/50 hover:text-accent-emerald transition-colors z-10"
+              aria-label="Scroll right"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          )}
+        </div>
+      </div>
     </section>
   );
 }

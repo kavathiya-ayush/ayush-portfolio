@@ -51,9 +51,9 @@ export default function MobileNav() {
       initial={{ y: 50, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, delay: 0.2 }}
-      className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] w-auto"
+      className="md:hidden fixed bottom-4 inset-x-4 z-[100]"
     >
-      <div className="flex items-center gap-1 p-2 rounded-2xl bg-void/60 backdrop-blur-xl border border-white/10 shadow-void-lg">
+      <div className="flex items-center justify-between gap-1 p-2 rounded-2xl bg-void/60 backdrop-blur-xl border border-white/10 shadow-void-lg">
         {navItems.map((item) => {
           const isActive = activeSection === item.id;
           const Icon = item.icon;
@@ -62,7 +62,7 @@ export default function MobileNav() {
             <button
               key={item.id}
               onClick={() => handleClick(item.id)}
-              className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-colors duration-300 ${
+              className={`relative flex flex-col items-center justify-center flex-1 h-12 rounded-xl transition-colors duration-300 ${
                 isActive ? "text-accent-emerald" : "text-white/40 hover:text-white/80"
               }`}
             >

@@ -110,7 +110,7 @@ export default function Hero({ heroReady }) {
                 className="inline-flex items-center gap-2 rounded-full bg-white/[0.04] border border-white/[0.06] px-4 py-1.5 lg:px-5 lg:py-2 text-xs lg:text-sm font-mono text-accent-emerald/90 mb-6 lg:mb-8"
               >
                 <span className="w-1.5 h-1.5 lg:w-2 lg:h-2 rounded-full bg-accent-emerald animate-pulse" />
-                Available for engineering roles
+                Available for new projects
               </motion.div>
 
               {/* Giant name lines & Mobile Portrait inline */}
