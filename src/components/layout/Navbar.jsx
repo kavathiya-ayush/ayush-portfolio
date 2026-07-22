@@ -63,11 +63,11 @@ export default function Navbar() {
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, backdropFilter: "blur(0px)" }}
-            animate={{ opacity: 1, backdropFilter: "blur(16px)" }}
-            exit={{ opacity: 0, backdropFilter: "blur(0px)" }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="md:hidden fixed inset-0 z-[100] bg-void/90 flex flex-col items-center justify-center"
+            className="md:hidden fixed inset-0 z-[100] bg-[#0F0F1A]/95 flex flex-col items-center justify-center"
           >
             <button
               onClick={() => setIsOpen(false)}

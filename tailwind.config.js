@@ -78,12 +78,12 @@ export default {
       // ── Keyframes ──
       keyframes: {
         antigravity: {
-          "0%, 100%": { transform: "translateY(0px)" },
-          "50%": { transform: "translateY(-12px)" },
+          "0%, 100%": { transform: "translate3d(0, 0px, 0)" },
+          "50%": { transform: "translate3d(0, -12px, 0)" },
         },
         "antigravity-delayed": {
-          "0%, 100%": { transform: "translateY(0px)" },
-          "50%": { transform: "translateY(-8px)" },
+          "0%, 100%": { transform: "translate3d(0, 0px, 0)" },
+          "50%": { transform: "translate3d(0, -8px, 0)" },
         },
         "counter-glow": {
           "0%, 100%": { textShadow: "0 0 20px rgba(16,185,129,0.3)" },
@@ -94,8 +94,8 @@ export default {
           "100%": { transform: "rotate(360deg)" },
         },
         "bounce-subtle": {
-          "0%, 100%": { transform: "translateY(0)", opacity: "0.5" },
-          "50%": { transform: "translateY(8px)", opacity: "1" },
+          "0%, 100%": { transform: "translate3d(0, 0, 0)", opacity: "0.5" },
+          "50%": { transform: "translate3d(0, 8px, 0)", opacity: "1" },
         },
         blink: {
           "0%, 100%": { opacity: "1" },

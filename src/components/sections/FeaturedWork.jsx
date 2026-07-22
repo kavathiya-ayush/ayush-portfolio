@@ -1,8 +1,23 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ExternalLink, Github, ArrowUpRight, AlertTriangle, X, Info, Download, ChevronLeft, ChevronRight } from "lucide-react";
 
 import { projects } from "../../data/portfolio";
+
+// Cache window width to avoid forced synchronous layout reflows during render
+function useIsMobile(breakpoint = 768) {
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth < breakpoint : false
+  );
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < breakpoint);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [breakpoint]);
+
+  return isMobile;
+}
 
 const container = {
   hidden: {},
@@ -19,7 +34,7 @@ const cardVariant = {
   },
 };
 
-function ProjectCard({ project, index, onOpenWarning }) {
+function ProjectCard({ project, index, onOpenWarning, isMobile }) {
   return (
     <motion.div
       layoutId={`project-${project.title}`}
@@ -81,7 +96,7 @@ function ProjectCard({ project, index, onOpenWarning }) {
         </div>
 
         <div className="mt-auto flex items-center gap-5 border-t border-white/[0.04] pt-6">
-          {project.warningType || project.isDesktop || window.innerWidth < 768 ? (
+          {project.warningType || project.isDesktop || isMobile ? (
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -89,8 +104,8 @@ function ProjectCard({ project, index, onOpenWarning }) {
               }}
               className="inline-flex items-center gap-1.5 text-base text-white/50 hover:text-accent-slate transition-colors duration-300 z-10 relative"
             >
-              {project.isDesktop && window.innerWidth >= 768 ? <Download className="w-4 h-4" /> : <ExternalLink className="w-4 h-4" />}
-              {window.innerWidth < 768 ? "View Details" : project.isDesktop ? "Download App" : "Live Demo"}
+              {project.isDesktop && !isMobile ? <Download className="w-4 h-4" /> : <ExternalLink className="w-4 h-4" />}
+              {isMobile ? "View Details" : project.isDesktop ? "Download App" : "Live Demo"}
             </button>
           ) : (
             <a
@@ -126,6 +141,7 @@ export default function FeaturedWork() {
   const scrollRef = useRef(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+  const isMobile = useIsMobile();
 
   const checkScroll = () => {
     if (scrollRef.current) {
@@ -320,6 +336,7 @@ export default function FeaturedWork() {
             project={project}
             index={i}
             onOpenWarning={setActiveProject}
+            isMobile={isMobile}
           />
         ))}
         </motion.div>

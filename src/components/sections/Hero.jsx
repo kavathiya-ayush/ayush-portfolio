@@ -3,7 +3,6 @@ import {
   motion,
   useScroll,
   useTransform,
-  useSpring,
 } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 
@@ -59,24 +58,20 @@ export default function Hero({ heroReady }) {
     offset: ["start start", "end start"],
   });
 
-  // Smooth spring for organic parallax feel
-  const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: 100,
-    damping: 30,
-    restDelta: 0.001,
-  });
+  // Direct useTransform without useSpring — much lighter on CPU
+  // useSpring adds interpolation on every frame which is expensive on low-end devices
 
   // Portrait: moves up faster than scroll, fades out
-  const portraitY = useTransform(smoothProgress, [0, 1], [0, -200]);
-  const portraitOpacity = useTransform(smoothProgress, [0, 0.5], [1, 0]);
-  const portraitScale = useTransform(smoothProgress, [0, 0.6], [1, 0.92]);
+  const portraitY = useTransform(scrollYProgress, [0, 1], [0, -200]);
+  const portraitOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+  const portraitScale = useTransform(scrollYProgress, [0, 0.6], [1, 0.92]);
 
   // Text: slight counter-parallax for depth separation
-  const textY = useTransform(smoothProgress, [0, 1], [0, -80]);
-  const textOpacity = useTransform(smoothProgress, [0, 0.7], [1, 0]);
+  const textY = useTransform(scrollYProgress, [0, 1], [0, -80]);
+  const textOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
 
   // Scroll indicator fade-out
-  const indicatorOpacity = useTransform(smoothProgress, [0, 0.15], [1, 0]);
+  const indicatorOpacity = useTransform(scrollYProgress, [0, 0.15], [1, 0]);
 
   return (
     <section
@@ -150,16 +145,12 @@ export default function Hero({ heroReady }) {
                   }}
                   className="md:hidden flex-1 aspect-square max-w-[160px] relative mt-2"
                 >
-                  {/* Radiating Background Ripples */}
-                  <motion.div
-                    className="absolute inset-0 rounded-full border-2 border-accent-emerald/50 z-0 pointer-events-none"
-                    animate={{ scale: [1, 1.6], opacity: [0.6, 0] }}
-                    transition={{ duration: 2.5, repeat: Infinity, ease: "easeOut" }}
+                  {/* Radiating Background Ripples — CSS-only for compositor thread performance */}
+                  <div
+                    className="absolute inset-0 rounded-full border-2 border-accent-emerald/50 z-0 pointer-events-none hero-ripple"
                   />
-                  <motion.div
-                    className="absolute inset-0 rounded-full border-2 border-accent-emerald/50 z-0 pointer-events-none"
-                    animate={{ scale: [1, 1.6], opacity: [0.6, 0] }}
-                    transition={{ duration: 2.5, repeat: Infinity, ease: "easeOut", delay: 1.25 }}
+                  <div
+                    className="absolute inset-0 rounded-full border-2 border-accent-emerald/50 z-0 pointer-events-none hero-ripple-delayed"
                   />
 
                   {/* Main Portrait Container */}
@@ -283,10 +274,10 @@ export default function Hero({ heroReady }) {
                 </div>
               </div>
 
-              {/* Glow halo behind portrait */}
+              {/* Glow halo behind portrait — reduced blur radii for performance */}
               <div className="absolute inset-0 -z-10 pointer-events-none">
-                <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] lg:w-[500px] h-[280px] lg:h-[500px] rounded-full bg-accent-slate/[0.08] blur-[80px] lg:blur-[100px]" />
-                <div className="absolute bottom-1/4 left-1/3 w-[200px] lg:w-[300px] h-[200px] lg:h-[300px] rounded-full bg-accent-emerald/[0.05] blur-[60px] lg:blur-[80px]" />
+                <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] lg:w-[500px] h-[280px] lg:h-[500px] rounded-full" style={{ background: 'radial-gradient(circle, rgba(148,163,184,0.08) 0%, transparent 70%)' }} />
+                <div className="absolute bottom-1/4 left-1/3 w-[200px] lg:w-[300px] h-[200px] lg:h-[300px] rounded-full" style={{ background: 'radial-gradient(circle, rgba(16,185,129,0.05) 0%, transparent 70%)' }} />
               </div>
             </motion.div>
           </motion.div>

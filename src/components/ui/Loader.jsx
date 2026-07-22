@@ -78,7 +78,7 @@ export default function Loader({ onComplete }) {
 
           {/* Center content */}
           <div className="relative z-30 flex flex-col items-center justify-center gap-6">
-            <div className="absolute w-[300px] h-[300px] rounded-full bg-accent-emerald/[0.06] blur-[100px] pointer-events-none" />
+            <div className="absolute w-[300px] h-[300px] rounded-full bg-accent-emerald/[0.06] blur-[60px] pointer-events-none" />
 
             {/* Letter reveal */}
             <div className="flex items-center gap-1 sm:gap-2 overflow-hidden perspective-[800px]">

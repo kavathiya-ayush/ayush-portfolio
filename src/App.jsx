@@ -25,10 +25,10 @@ export default function App() {
 
       {/* Site shell */}
       <div className="relative bg-void min-h-screen overflow-x-hidden">
-        {/* Fixed ambient background */}
+        {/* Fixed ambient background — uses opacity gradients instead of blur for performance */}
         <div className="pointer-events-none fixed inset-0 z-0">
-          <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-accent-emerald/[0.04] blur-[140px]" />
-          <div className="absolute bottom-[-15%] right-[-10%] w-[500px] h-[500px] rounded-full bg-accent-slate/[0.03] blur-[140px]" />
+          <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full" style={{ background: 'radial-gradient(circle, rgba(16,185,129,0.04) 0%, transparent 70%)' }} />
+          <div className="absolute bottom-[-15%] right-[-10%] w-[500px] h-[500px] rounded-full" style={{ background: 'radial-gradient(circle, rgba(148,163,184,0.03) 0%, transparent 70%)' }} />
           <div className="absolute inset-0 bg-grain opacity-[0.02] mix-blend-overlay" />
         </div>
 

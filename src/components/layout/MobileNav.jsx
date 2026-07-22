@@ -53,7 +53,7 @@ export default function MobileNav() {
       transition={{ duration: 0.5, delay: 0.2 }}
       className="md:hidden fixed bottom-4 inset-x-4 z-[100]"
     >
-      <div className="flex items-center justify-between gap-1 p-2 rounded-2xl bg-void/60 backdrop-blur-xl border border-white/10 shadow-void-lg">
+      <div className="flex items-center justify-between gap-1 p-2 rounded-2xl bg-[#0F0F1A]/80 backdrop-blur-md border border-white/10 shadow-void-lg">
         {navItems.map((item) => {
           const isActive = activeSection === item.id;
           const Icon = item.icon;

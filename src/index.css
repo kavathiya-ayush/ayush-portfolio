@@ -62,17 +62,42 @@
 @layer components {
   /* ── Void card: the primary surface ── */
   .void-card {
-    @apply bg-glass-50 backdrop-blur-glass border border-glass-border shadow-void-lg;
+    @apply bg-glass-50 border border-glass-border shadow-void-lg;
+    background-color: rgba(20, 20, 34, 0.85);
+    contain: layout style paint;
   }
 
   .void-card-sm {
-    @apply bg-glass-50 backdrop-blur-glass border border-glass-border shadow-void-sm;
+    @apply bg-glass-50 border border-glass-border shadow-void-sm;
+    background-color: rgba(20, 20, 34, 0.85);
+    contain: layout style paint;
+  }
+
+  /* Enable backdrop-blur only on capable devices (non-low-end) */
+  @supports (backdrop-filter: blur(20px)) {
+    @media (min-width: 769px) {
+      .void-card,
+      .void-card-sm {
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        background-color: rgba(255, 255, 255, 0.03);
+      }
+    }
   }
 
   /* ── Antigravity card: void-card + continuous float ── */
   .antigravity-card {
     @apply void-card;
     animation: antigravity 8s ease-in-out infinite;
+    will-change: transform;
+    transform: translateZ(0);
+  }
+
+  /* ── GPU promotion for animated elements ── */
+  [style*="animation: antigravity"],
+  [style*="animation:antigravity"] {
+    will-change: transform;
+    transform: translateZ(0);
   }
 
   /* ── Animated conic-gradient border ring on hover ── */
@@ -145,6 +170,21 @@
   .text-glow-slate {
     text-shadow: 0 0 40px rgba(148, 163, 184, 0.3),
       0 0 80px rgba(148, 163, 184, 0.1);
+  }
+
+  /* ── Mobile hero ripple — CSS-only for compositor thread ── */
+  .hero-ripple {
+    animation: hero-ripple 2.5s ease-out infinite;
+    will-change: transform, opacity;
+  }
+  .hero-ripple-delayed {
+    animation: hero-ripple 2.5s ease-out 1.25s infinite;
+    will-change: transform, opacity;
+  }
+
+  @keyframes hero-ripple {
+    0% { transform: scale(1); opacity: 0.6; }
+    100% { transform: scale(1.6); opacity: 0; }
   }
 }
 
