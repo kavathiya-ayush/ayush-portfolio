@@ -30,10 +30,10 @@ export default function Services() {
         <p className="font-mono text-xs text-accent-emerald/60 tracking-[0.25em] uppercase mb-4">
           What I Build
         </p>
-        <h2 className="font-display text-3xl sm:text-5xl lg:text-7xl font-bold text-white max-w-3xl leading-[1.05]">
+        <h2 className="font-display text-4xl sm:text-5xl lg:text-7xl font-bold text-white max-w-3xl leading-[1.15] sm:leading-[1.05]">
           One engineer,
           <br />
-          <span className="text-white/20">three surfaces.</span>
+          <span className="text-white/20 inline-block mt-1 sm:mt-0">three surfaces.</span>
         </h2>
       </motion.div>
 

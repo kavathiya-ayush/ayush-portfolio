@@ -90,11 +90,11 @@ export default function Hero({ heroReady }) {
 
       {/* ── Content grid ── */}
       <div className="relative z-10 w-full max-w-[1400px] mx-auto px-6 sm:px-10 lg:px-16">
-        <div className="relative flex flex-col lg:flex-row items-center lg:items-start min-h-screen pt-14 md:pt-20 pb-16 lg:pt-24 lg:pb-0">
+        <div className="relative flex flex-col lg:flex-row items-center lg:items-start min-h-[100svh] pt-28 md:pt-20 pb-16 lg:pt-24 lg:pb-0">
           {/* ── LEFT: Typography block ── */}
           <motion.div
             style={{ y: textY, opacity: textOpacity }}
-            className="relative z-20 flex-1 flex flex-col justify-center"
+            className="relative z-20 flex-1 flex flex-col justify-center max-md:justify-start"
           >
             <motion.div
               initial="hidden"
@@ -185,9 +185,9 @@ export default function Hero({ heroReady }) {
                 variants={fadeUp}
                 className="mt-6 lg:mt-8 text-sm sm:text-base lg:text-lg text-white/40 max-w-md leading-relaxed font-light"
               >
-                Full Stack Developer
-                <span className="text-white/15 mx-2">|</span>
-                Mobile & Desktop Software Engineer
+                <span className="block md:inline">Full Stack Developer</span>
+                <span className="text-white/15 mx-2 max-md:hidden">|</span>
+                <span className="block md:inline">Mobile & Desktop Software Engineer</span>
               </motion.p>
 
               <motion.p

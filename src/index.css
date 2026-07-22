@@ -16,6 +16,12 @@
   body {
     @apply bg-void text-white/90 font-sans antialiased;
   }
+  
+  @media (max-width: 768px) {
+    html, body {
+      overflow-x: hidden;
+    }
+  }
   ::selection {
     @apply bg-accent-emerald/40 text-white;
   }
