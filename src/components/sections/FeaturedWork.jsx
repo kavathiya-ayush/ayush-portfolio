@@ -96,7 +96,7 @@ function ProjectCard({ project, index, onOpenWarning, isMobile }) {
         </div>
 
         <div className="mt-auto flex items-center gap-5 border-t border-white/[0.04] pt-6">
-          {project.warningType || project.isDesktop || isMobile ? (
+          {project.warningType || project.infoText || project.isDesktop || isMobile ? (
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -258,6 +258,14 @@ export default function FeaturedWork() {
                 </p>
               )}
 
+              {activeProject.infoText && (
+                <div className="bg-accent-emerald/10 border border-accent-emerald/20 rounded-xl p-4 mb-6">
+                  <p className="text-white/80 leading-relaxed">
+                    {activeProject.infoText}
+                  </p>
+                </div>
+              )}
+
               {activeProject.isDesktop && (
                 <div className="bg-accent-slate/10 border border-accent-slate/20 rounded-xl p-4 mb-6">
                   <p className="text-white/80 leading-relaxed mb-2 font-display font-semibold">
@@ -307,7 +315,7 @@ export default function FeaturedWork() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-100px" }}
         transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-        className="max-w-6xl mx-auto mb-12 md:mb-20"
+        className="max-w-[1536px] mx-auto mb-12 md:mb-20"
       >
         <p className="font-mono text-xs text-accent-emerald/60 tracking-[0.25em] uppercase mb-4">
           Featured Work
@@ -328,7 +336,7 @@ export default function FeaturedWork() {
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, margin: "-80px" }}
-          className="max-w-6xl mx-auto flex max-md:-mx-6 max-md:px-6 overflow-x-auto snap-x snap-mandatory pb-8 gap-6 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6 md:pb-0 hide-scrollbar relative"
+          className="max-w-[1536px] mx-auto flex max-md:-mx-6 max-md:px-6 overflow-x-auto snap-x snap-mandatory pb-8 gap-6 md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-6 md:pb-0 hide-scrollbar relative"
         >
         {projects.map((project, i) => (
           <ProjectCard

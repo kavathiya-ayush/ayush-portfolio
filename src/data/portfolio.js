@@ -64,7 +64,7 @@ export const projects = [
     gradient: "from-green-500/20 via-void-100 to-void",
     live: "https://chat-wala-ten.vercel.app/",
     github: "https://github.com/kavathiya-ayush/chat-wala",
-    warningType: "vercel",
+    infoText: "This is a fully functional real-time chat application. Unlike some demo projects, this application is completely active. You can sign in using just your email address and immediately start messaging other users.",
   },
   {
     title: "Shivam Pump Stock",
