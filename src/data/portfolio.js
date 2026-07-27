@@ -57,6 +57,16 @@ export const projects = [
     credentials: { username: "admin", password: "admin123" },
   },
   {
+    title: "Chat Wala",
+    description:
+      "A WhatsApp clone web app. The only requirement is an email address to start chatting with anyone.",
+    tags: ["Web", "Chat", "Real-time", "Vercel"],
+    gradient: "from-green-500/20 via-void-100 to-void",
+    live: "https://chat-wala-ten.vercel.app/",
+    github: "https://github.com/kavathiya-ayush/chat-wala",
+    warningType: "vercel",
+  },
+  {
     title: "Shivam Pump Stock",
     description:
       "A comprehensive submersible pump inventory and stock management system designed to track sales, supplies, and stock levels.",
