@@ -58,7 +58,7 @@ export default function FeaturedWork() {
   };
 
   return (
-    <section id="work" className="relative px-6 py-20 lg:py-32 w-full">
+    <section id="work" className="relative px-6 py-20 lg:py-32 w-full scroll-mt-28">
       {/* ── Section Header & Filter Tabs ── */}
       <div className="max-w-6xl mx-auto mb-10 sm:mb-14">
         <motion.div

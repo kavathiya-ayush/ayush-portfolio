@@ -100,7 +100,7 @@ export default function LiquidGlassCard({
         } ${isHovered ? "opacity-100" : "opacity-30"}`}
       />
 
-      <div className="relative z-10">{children}</div>
+      {children}
     </motion.div>
   );
 }

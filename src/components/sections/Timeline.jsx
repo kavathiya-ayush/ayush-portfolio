@@ -5,7 +5,7 @@ import { timelineEvents } from "../../data/portfolio";
 
 export default function Timeline() {
   return (
-    <section id="journey" className="relative px-6 py-20 lg:py-28 w-full">
+    <section id="journey" className="relative px-6 py-20 lg:py-28 w-full scroll-mt-28">
       <div className="max-w-4xl mx-auto">
         {/* Section Header */}
         <motion.div

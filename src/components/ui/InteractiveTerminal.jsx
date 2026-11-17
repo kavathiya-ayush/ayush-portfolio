@@ -205,7 +205,7 @@ export default function InteractiveTerminal() {
   };
 
   return (
-    <section id="terminal" className="relative px-6 py-16 lg:py-24 w-full">
+    <section id="terminal" className="relative px-6 py-16 lg:py-24 w-full scroll-mt-28">
       <div className="max-w-5xl mx-auto">
         {/* Section Header */}
         <motion.div
