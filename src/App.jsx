@@ -1,12 +1,18 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { PerformanceProvider } from "./context/PerformanceContext";
+import LiquidAuroraBackground from "./components/ui/LiquidAuroraBackground";
 import Loader from "./components/ui/Loader";
+import Toast from "./components/ui/Toast";
+import ResumeModal from "./components/ui/ResumeModal";
 import Navbar from "./components/layout/Navbar";
 import MobileNav from "./components/layout/MobileNav";
 import Hero from "./components/sections/Hero";
-import Services from "./components/sections/Services";
+import WhyHireMe from "./components/sections/WhyHireMe";
+import InteractiveTerminal from "./components/ui/InteractiveTerminal";
 import FeaturedWork from "./components/sections/FeaturedWork";
 import Stack from "./components/sections/Stack";
+import Timeline from "./components/sections/Timeline";
 import Contact from "./components/sections/Contact";
 
 export default function App() {
@@ -19,26 +25,26 @@ export default function App() {
   };
 
   return (
-    <>
-      {/* Preloader */}
+    <PerformanceProvider>
+      {/* ── Dynamic Island Toast & In-Browser Resume Modal ── */}
+      <Toast />
+      <ResumeModal />
+
+      {/* ── Entrance Preloader ── */}
       <Loader onComplete={handleLoaderComplete} />
 
-      {/* Site shell */}
-      <div className="relative bg-void min-h-screen overflow-x-hidden">
-        {/* Fixed ambient background — uses opacity gradients instead of blur for performance */}
-        <div className="pointer-events-none fixed inset-0 z-0">
-          <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full" style={{ background: 'radial-gradient(circle, rgba(16,185,129,0.04) 0%, transparent 70%)' }} />
-          <div className="absolute bottom-[-15%] right-[-10%] w-[500px] h-[500px] rounded-full" style={{ background: 'radial-gradient(circle, rgba(148,163,184,0.03) 0%, transparent 70%)' }} />
-          <div className="absolute inset-0 bg-grain opacity-[0.02] mix-blend-overlay" />
-        </div>
+      {/* ── Luxury Site Shell with Luminous Fluid Liquid Aurora ── */}
+      <div className="relative bg-obsidian min-h-screen overflow-x-hidden selection:bg-gold/30 selection:text-gold-light">
+        {/* Dynamic Luminous Fluid Liquid Aurora Background */}
+        <LiquidAuroraBackground />
 
-        {/* Navbar — delayed entrance */}
+        {/* ── Apple VisionOS Floating Liquid Dock Navbar ── */}
         <AnimatePresence>
           {!loading && (
             <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.7, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
             >
               <Navbar />
               <MobileNav />
@@ -46,32 +52,40 @@ export default function App() {
           )}
         </AnimatePresence>
 
-        <main className="relative z-10 max-md:h-[100dvh] max-md:overflow-y-auto max-md:snap-y max-md:snap-mandatory scroll-smooth">
-          <div className="max-md:min-h-[100dvh] max-md:snap-start max-md:flex max-md:items-center max-md:justify-center">
-            <Hero heroReady={heroReady} />
-          </div>
-          <div className="max-md:min-h-[100dvh] max-md:snap-start max-md:flex max-md:items-center max-md:justify-center">
-            <Services />
-          </div>
-          <div className="max-md:min-h-[100dvh] max-md:snap-start max-md:flex max-md:items-center max-md:justify-center">
-            <FeaturedWork />
-          </div>
-          <div className="max-md:min-h-[100dvh] max-md:snap-start max-md:flex max-md:items-center max-md:justify-center">
-            <Stack />
-          </div>
-          <div className="max-md:min-h-[100dvh] max-md:snap-start max-md:flex max-md:items-center max-md:justify-center max-md:flex-col">
-            <Contact />
-            <footer className="md:hidden relative z-10 border-t border-white/[0.04] px-6 py-8 w-full text-center text-xs text-white/20 font-mono mt-auto">
-              © {new Date().getFullYear()} Ayush — built with React, Tailwind & Framer Motion
-            </footer>
-          </div>
+        {/* ── Main Structured Sections ── */}
+        <main className="relative z-10 scroll-smooth">
+          {/* Hero: Spatial VisionOS Rig & Sem 6 Callout */}
+          <Hero heroReady={heroReady} />
+
+          {/* Recruiter Fast-Track: Why Hire Ayush */}
+          <WhyHireMe />
+
+          {/* Interactive Developer Playground */}
+          <InteractiveTerminal />
+
+          {/* Flagship Production Systems */}
+          <FeaturedWork />
+
+          {/* Categorized Technical Arsenal */}
+          <Stack />
+
+          {/* Academic & Engineering Journey */}
+          <Timeline />
+
+          {/* Luxury Contact Suite */}
+          <Contact />
         </main>
 
-        <footer className="hidden md:block relative z-10 border-t border-white/[0.04] px-6 py-8 text-center text-xs text-white/20 font-mono">
-          © {new Date().getFullYear()} Ayush — built with React, Tailwind
-          {"&"} Framer Motion
+        {/* ── High-Luxury Footer ── */}
+        <footer className="relative z-10 border-t border-white/[0.08] px-6 py-10 text-center text-xs text-white/40 font-mono space-y-2 pb-24 md:pb-10">
+          <p className="flex items-center justify-center gap-2">
+            <span>Designed & Engineered with Apple iOS & visionOS Liquid Glass Aesthetics</span>
+          </p>
+          <p className="text-white/20">
+            © {new Date().getFullYear()} Ayush Kavathiya — B.Tech Computer Science (Semester 6).
+          </p>
         </footer>
       </div>
-    </>
+    </PerformanceProvider>
   );
 }

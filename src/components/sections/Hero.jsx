@@ -1,299 +1,296 @@
 import { useRef } from "react";
-import {
-  motion,
-  useScroll,
-  useTransform,
-} from "framer-motion";
-import { ChevronDown } from "lucide-react";
-
-// ── Entrance animation variants ──
-// Triggered only after the preloader exits (heroReady === true).
+import { motion, useScroll, useTransform, useMotionValue, useSpring } from "framer-motion";
+import { ChevronDown, ArrowUpRight, FileText, Sparkles, GraduationCap, ShieldCheck, Zap } from "lucide-react";
+import { usePerformance } from "../../context/PerformanceContext";
+import { playTactileClick } from "../../utils/audio";
 
 const textLine = {
-  hidden: { opacity: 0, y: 60, skewY: 3, filter: "blur(8px)" },
+  hidden: { opacity: 0, y: 35, filter: "blur(6px)" },
   show: {
     opacity: 1,
     y: 0,
-    skewY: 0,
     filter: "blur(0px)",
-    transition: { duration: 0.9, ease: [0.16, 1, 0.3, 1] },
-  },
-};
-
-const portraitReveal = {
-  hidden: { opacity: 0, x: 80, scale: 1.08, filter: "blur(12px)" },
-  show: {
-    opacity: 1,
-    x: 0,
-    scale: 1,
-    filter: "blur(0px)",
-    transition: { duration: 1.1, ease: [0.16, 1, 0.3, 1] },
+    transition: { duration: 0.75, ease: [0.16, 1, 0.3, 1] },
   },
 };
 
 const fadeUp = {
-  hidden: { opacity: 0, y: 30 },
+  hidden: { opacity: 0, y: 20 },
   show: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] },
+    transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] },
   },
 };
 
-/**
- * Hero — "Big Picture" section.
- *
- * Asymmetric layout: massive portrait on the right with text overlapping
- * on the left. The portrait floats with an antigravity animation and
- * parallaxes on scroll (moves faster, fades out).
- *
- * @param {{ heroReady: boolean }} props
- */
 export default function Hero({ heroReady }) {
+  const { isEcoMode, setIsResumeOpen } = usePerformance();
   const sectionRef = useRef(null);
+  const cardRef = useRef(null);
 
-  // Scroll-linked parallax
+  // 3D Perspective Tilt for the Portrait Sculpture
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  const rotateX = useSpring(useTransform(mouseY, [-0.5, 0.5], ["7deg", "-7deg"]), {
+    stiffness: 260,
+    damping: 25,
+  });
+  const rotateY = useSpring(useTransform(mouseX, [-0.5, 0.5], ["-7deg", "7deg"]), {
+    stiffness: 260,
+    damping: 25,
+  });
+
+  const handleMouseMove = (e) => {
+    if (!cardRef.current || isEcoMode) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    const xPct = (e.clientX - rect.left) / rect.width - 0.5;
+    const yPct = (e.clientY - rect.top) / rect.height - 0.5;
+    mouseX.set(xPct);
+    mouseY.set(yPct);
+  };
+
+  const handleMouseLeave = () => {
+    mouseX.set(0);
+    mouseY.set(0);
+  };
+
+  // Scroll parallax
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ["start start", "end start"],
   });
 
-  // Direct useTransform without useSpring — much lighter on CPU
-  // useSpring adds interpolation on every frame which is expensive on low-end devices
-
-  // Portrait: moves up faster than scroll, fades out
-  const portraitY = useTransform(scrollYProgress, [0, 1], [0, -200]);
-  const portraitOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
-  const portraitScale = useTransform(scrollYProgress, [0, 0.6], [1, 0.92]);
-
-  // Text: slight counter-parallax for depth separation
-  const textY = useTransform(scrollYProgress, [0, 1], [0, -80]);
-  const textOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
-
-  // Scroll indicator fade-out
-  const indicatorOpacity = useTransform(scrollYProgress, [0, 0.15], [1, 0]);
+  const portraitY = useTransform(scrollYProgress, [0, 1], [0, isEcoMode ? 0 : -80]);
+  const portraitOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0.1]);
 
   return (
     <section
       ref={sectionRef}
       id="home"
-      className="relative min-h-screen flex items-center overflow-hidden"
+      className="relative min-h-[92svh] flex items-center justify-center pt-24 sm:pt-28 pb-12 sm:pb-16"
     >
-      {/* Ambient mesh glow */}
-      <div className="pointer-events-none absolute inset-0 bg-mesh-hero" />
-      <div className="pointer-events-none absolute inset-0 bg-grain opacity-[0.02] mix-blend-overlay" />
-
-      {/* ── Content grid ── */}
-      <div className="relative z-10 w-full max-w-[1400px] mx-auto px-6 sm:px-10 lg:px-16">
-        <div className="relative flex flex-col lg:flex-row items-center lg:items-start min-h-[100svh] pt-28 md:pt-20 pb-16 lg:pt-24 lg:pb-0">
-          {/* ── LEFT: Typography block ── */}
-          <motion.div
-            style={{ y: textY, opacity: textOpacity }}
-            className="relative z-20 flex-1 flex flex-col justify-center max-md:justify-start"
-          >
+      <div className="relative z-10 w-full max-w-[1360px] mx-auto px-6 sm:px-10 lg:px-14">
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-10 lg:gap-12">
+          
+          {/* ── LEFT COLUMN: High-Fashion Tech Editorial ── */}
+          <div className="flex-1 flex flex-col justify-center max-w-2xl text-left">
             <motion.div
               initial="hidden"
               animate={heroReady ? "show" : "hidden"}
               variants={{
                 hidden: {},
-                show: { transition: { staggerChildren: 0.1, delayChildren: 0.15 } },
+                show: { transition: { staggerChildren: 0.08, delayChildren: 0.1 } },
               }}
             >
-              {/* Status badge */}
+              {/* Dynamic Island Status Pill */}
               <motion.div
                 variants={fadeUp}
-                className="inline-flex items-center gap-2 rounded-full bg-white/[0.04] border border-white/[0.06] px-4 py-1.5 lg:px-5 lg:py-2 text-xs lg:text-sm font-mono text-accent-emerald/90 mb-6 lg:mb-8"
+                className="inline-flex items-center gap-2 rounded-full apple-liquid-card px-3.5 py-1 text-xs font-mono text-gold-light mb-4 shadow-glass-gold"
               >
-                <span className="w-1.5 h-1.5 lg:w-2 lg:h-2 rounded-full bg-accent-emerald animate-pulse" />
-                Available for new projects
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse ring-2 ring-emerald-400/40" />
+                <span className="tracking-wide">Pre-Final Year CS • Semester 6</span>
+                <span className="text-white/20">|</span>
+                <span className="text-white/80 hidden xs:inline">Open for SDE Intern</span>
+                <Sparkles className="w-3.5 h-3.5 text-gold-light" />
               </motion.div>
 
-              {/* Giant name lines & Mobile Portrait inline */}
-              <div className="flex items-center justify-between gap-3 sm:gap-6 w-full">
-                <div className="flex flex-col shrink-0">
-                  <div className="overflow-hidden">
-                    <motion.h1
-                      variants={textLine}
-                      className="font-display font-bold text-[2.7rem] sm:text-5xl md:text-hero text-white tracking-tight leading-none"
-                    >
-                      AYUSH.
-                    </motion.h1>
-                  </div>
-                  <div className="overflow-hidden">
-                    <motion.h1
-                      variants={textLine}
-                      className="font-display font-bold text-[2.7rem] sm:text-5xl md:text-hero text-white/20 tracking-tight leading-none"
-                    >
-                      ENGINEER.
-                    </motion.h1>
-                  </div>
-                  <div className="overflow-hidden">
-                    <motion.h1
-                      variants={textLine}
-                      className="font-display font-bold text-[2.7rem] sm:text-5xl md:text-hero text-white/10 tracking-tight leading-none"
-                    >
-                      CREATOR.
-                    </motion.h1>
-                  </div>
+              {/* Massive Editorial Name */}
+              <div className="flex flex-col tracking-tight leading-none mb-3">
+                <div className="overflow-hidden">
+                  <motion.h1
+                    variants={textLine}
+                    className="font-display font-extrabold text-[2.8rem] sm:text-5xl md:text-6xl lg:text-[4.6rem] tracking-tight text-white leading-[0.95]"
+                  >
+                    AYUSH
+                  </motion.h1>
                 </div>
-
-                {/* Mobile-only inline circular portrait - flexes to fill space but stays completely stationary */}
-                <motion.div
-                  variants={{
-                    hidden: { opacity: 0 },
-                    show: { opacity: 1, transition: { duration: 1 } }
-                  }}
-                  className="md:hidden flex-1 aspect-square max-w-[160px] relative mt-2"
-                >
-                  {/* Radiating Background Ripples — CSS-only for compositor thread performance */}
-                  <div
-                    className="absolute inset-0 rounded-full border-2 border-accent-emerald/50 z-0 pointer-events-none hero-ripple"
-                  />
-                  <div
-                    className="absolute inset-0 rounded-full border-2 border-accent-emerald/50 z-0 pointer-events-none hero-ripple-delayed"
-                  />
-
-                  {/* Main Portrait Container */}
-                  <div className="w-full h-full rounded-full overflow-hidden border-[3px] border-white/10 bg-void-100 flex items-center justify-center relative z-10 shadow-void-sm">
-                    <img
-                      src="/hero-portrait.jpeg"
-                      alt="Ayush"
-                      className="w-full h-full object-cover scale-110"
-                      onError={(e) => {
-                        e.target.style.display = "none";
-                        e.target.nextSibling.style.display = "flex";
-                      }}
-                    />
-                    <div className="hidden absolute inset-0 items-center justify-center bg-accent-emerald/10">
-                       <span className="font-display text-4xl font-bold text-white/50 select-none">A</span>
-                    </div>
-                  </div>
-                </motion.div>
+                <div className="overflow-hidden mt-1">
+                  <motion.h1
+                    variants={textLine}
+                    className="font-display font-extrabold text-[2.8rem] sm:text-5xl md:text-6xl lg:text-[4.6rem] tracking-tight shimmer-text-gold leading-[0.95]"
+                  >
+                    KAVATHIYA.
+                  </motion.h1>
+                </div>
               </div>
 
-              {/* Sub-line */}
+              {/* Sub-Headline & Pitch */}
               <motion.p
                 variants={fadeUp}
-                className="mt-6 lg:mt-8 text-sm sm:text-base lg:text-lg text-white/40 max-w-md leading-relaxed font-light"
+                className="text-base sm:text-lg lg:text-xl text-white/90 font-medium leading-relaxed max-w-xl"
               >
-                <span className="block md:inline">Full Stack Developer</span>
-                <span className="text-white/15 mx-2 max-md:hidden">|</span>
-                <span className="block md:inline">Mobile & Desktop Software Engineer</span>
+                Full-Stack Software Engineer & Multi-Platform Systems Builder.
               </motion.p>
 
               <motion.p
                 variants={fadeUp}
-                className="mt-3 lg:mt-4 text-xs sm:text-sm text-white/25 max-w-lg leading-relaxed"
+                className="mt-2 text-xs sm:text-sm text-white/55 leading-relaxed max-w-lg font-light"
               >
-                I build production-grade software across the stack — from
-                native mobile apps to desktop tools to the web services that
-                tie them together.
+                Building production-grade web services, native Android mobile apps, and Python desktop automation utilities engineered for speed and reliability.
               </motion.p>
 
-              {/* CTAs */}
-              <motion.div variants={fadeUp} className="mt-8 lg:mt-10 flex flex-wrap gap-3 lg:gap-4">
+              {/* ── Apple VisionOS Spatial Metrics Capsule ── */}
+              <motion.div
+                variants={fadeUp}
+                className="mt-5 p-1.5 rounded-2xl apple-liquid-card max-w-xl shadow-glass-sm"
+              >
+                <div className="grid grid-cols-3 divide-x divide-white/[0.08] text-center">
+                  <div className="p-2 sm:p-2.5">
+                    <div className="font-display font-extrabold text-2xl sm:text-3xl text-gold-light">
+                      4+
+                    </div>
+                    <div className="text-[10px] sm:text-[11px] font-mono text-white/50 mt-0.5">
+                      Live Systems
+                    </div>
+                    <div className="mt-0.5 text-[9px] font-mono text-emerald-400 font-semibold uppercase tracking-wider">
+                      ● 100% Deployed
+                    </div>
+                  </div>
+
+                  <div className="p-2 sm:p-2.5">
+                    <div className="font-display font-extrabold text-2xl sm:text-3xl text-sapphire-light">
+                      3
+                    </div>
+                    <div className="text-[10px] sm:text-[11px] font-mono text-white/50 mt-0.5">
+                      Platforms
+                    </div>
+                    <div className="mt-0.5 text-[9px] font-mono text-white/40 uppercase tracking-wider">
+                      Web • App • PC
+                    </div>
+                  </div>
+
+                  <div className="p-2 sm:p-2.5">
+                    <div className="font-display font-extrabold text-2xl sm:text-3xl text-white">
+                      Sem 6
+                    </div>
+                    <div className="text-[10px] sm:text-[11px] font-mono text-white/50 mt-0.5">
+                      B.Tech CS
+                    </div>
+                    <div className="mt-0.5 text-[9px] font-mono text-gold-light/90 uppercase tracking-wider">
+                      Summer / Fall '26
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* ── Apple Liquid Glass CTAs (Always Visible Above Fold) ── */}
+              <motion.div
+                variants={fadeUp}
+                className="mt-6 flex flex-wrap items-center gap-3"
+              >
                 <motion.a
                   href="#work"
-                  whileHover={{ y: -3, scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                  className="group inline-flex items-center gap-2 rounded-2xl bg-white px-6 py-3.5 lg:px-8 lg:py-4 text-sm lg:text-base font-semibold text-void tracking-wide hover:shadow-glow-emerald transition-shadow"
+                  onClick={() => playTactileClick("light")}
+                  whileHover={{ scale: 1.03, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="group relative inline-flex items-center gap-2 rounded-xl apple-liquid-gold-button px-5 py-3 text-sm font-bold text-gold-light tracking-wide hover:brightness-110 transition-all overflow-hidden"
                 >
-                  View Projects
-                  <svg
-                    className="w-4 h-4 transition-transform group-hover:translate-x-0.5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M17 8l4 4m0 0l-4 4m4-4H3"
-                    />
-                  </svg>
+                  <span className="absolute inset-0 w-1/2 h-full bg-white/20 skew-x-12 -translate-x-full group-hover:translate-x-[300%] transition-transform duration-1000 ease-in-out" />
+                  <span className="relative z-10 text-white font-semibold">Explore Featured Systems</span>
+                  <ArrowUpRight className="w-4 h-4 text-gold-light relative z-10 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                 </motion.a>
 
-                <motion.a
-                  href="#contact"
-                  whileHover={{
-                    y: -3,
-                    scale: 1.03,
-                    borderColor: "rgba(255,255,255,0.2)",
+                <motion.button
+                  onClick={() => {
+                    playTactileClick("success");
+                    setIsResumeOpen(true);
                   }}
-                  whileTap={{ scale: 0.97 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                  className="inline-flex items-center gap-2 rounded-2xl border border-white/[0.08] bg-white/[0.03] px-6 py-3.5 lg:px-8 lg:py-4 text-sm lg:text-base font-medium text-white/60 hover:text-white transition-colors"
+                  whileHover={{ scale: 1.03, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="inline-flex items-center gap-2 rounded-xl apple-liquid-glass-button px-4 py-3 text-sm font-semibold text-white/90 hover:text-white hover:border-gold/40 transition-all shadow-glass-sm"
                 >
-                  Contact Me
+                  <FileText className="w-4 h-4 text-gold-light" />
+                  <span>Interactive CV</span>
+                </motion.button>
+
+                <motion.a
+                  href="#terminal"
+                  onClick={() => playTactileClick("light")}
+                  whileHover={{ scale: 1.03, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="inline-flex items-center gap-1.5 rounded-xl px-3 py-3 text-xs font-mono text-white/50 hover:text-white transition-colors"
+                >
+                  <Zap className="w-3.5 h-3.5 text-sapphire-light" />
+                  <span>Terminal CLI</span>
                 </motion.a>
               </motion.div>
             </motion.div>
-          </motion.div>
+          </div>
 
-          {/* ── RIGHT: Big Picture portrait ── */}
+          {/* ── RIGHT COLUMN: Spatial VisionOS Glass Portrait Rig ── */}
           <motion.div
-            style={{
-              y: portraitY,
-              opacity: portraitOpacity,
-              scale: portraitScale,
-            }}
-            className="max-md:hidden relative z-10 flex-shrink-0 w-full lg:w-[55%] lg:absolute lg:right-[-5%] lg:top-24 flex items-start justify-center lg:justify-end"
+            style={{ y: portraitY, opacity: portraitOpacity }}
+            className="flex-1 flex items-center justify-center relative w-full max-w-[380px] lg:max-w-[440px]"
           >
             <motion.div
-              initial="hidden"
-              animate={heroReady ? "show" : "hidden"}
-              variants={portraitReveal}
-              className="relative"
+              ref={cardRef}
+              onMouseMove={handleMouseMove}
+              onMouseLeave={handleMouseLeave}
+              style={
+                !isEcoMode
+                  ? {
+                      rotateX,
+                      rotateY,
+                      transformStyle: "preserve-3d",
+                    }
+                  : undefined
+              }
+              className="relative w-full aspect-[4/5] rounded-[2rem] apple-liquid-card p-3 shadow-2xl transition-all duration-300"
             >
-              {/* Portrait image — replace /hero-portrait.png with your transparent PNG */}
-              <div className="portrait-mask relative">
+              {/* Backlight Atmospheric Volumetric Aura */}
+              <div className="absolute inset-0 -z-10 rounded-[2rem] bg-gradient-to-tr from-gold/30 via-sapphire/25 to-transparent blur-3xl opacity-90" />
+
+              {/* Frameless Fluid Photo Canvas */}
+              <div className="relative w-full h-full rounded-2xl overflow-hidden bg-gradient-to-b from-white/[0.04] to-obsidian/90 border border-white/10 flex items-center justify-center">
                 <img
                   src="/hero-portrait.jpeg"
-                  alt="Ayush — Full Stack Engineer"
-                  className="w-full max-w-[280px] sm:max-w-[400px] lg:max-w-[600px] h-auto object-contain select-none"
-                  draggable={false}
+                  alt="Ayush Kavathiya"
+                  className="w-full h-full object-cover object-top filter brightness-[1.03] contrast-[1.04] portrait-mask"
                   onError={(e) => {
-                    // Fallback: show a gradient silhouette if image missing
                     e.target.style.display = "none";
                     e.target.nextSibling.style.display = "flex";
                   }}
                 />
-                {/* Fallback silhouette — shown only if portrait is missing */}
-                <div
-                  className="hidden w-[280px] sm:w-[400px] lg:w-[600px] h-[280px] sm:h-[400px] lg:h-[700px] rounded-full items-center justify-center"
-                  style={{
-                    background:
-                      "radial-gradient(ellipse at center, rgba(16,185,129,0.15) 0%, transparent 70%)",
-                  }}
-                >
-                  <span className="font-display text-[200px] font-bold text-white/[0.03] select-none">
-                    A
+                {/* Fallback Monogram Avatar */}
+                <div className="hidden absolute inset-0 items-center justify-center bg-gradient-to-br from-obsidian-100 to-obsidian">
+                  <span className="font-display text-8xl font-black text-gold-light/25 select-none">
+                    AK
                   </span>
                 </div>
-              </div>
 
-              {/* Glow halo behind portrait — reduced blur radii for performance */}
-              <div className="absolute inset-0 -z-10 pointer-events-none">
-                <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] lg:w-[500px] h-[280px] lg:h-[500px] rounded-full" style={{ background: 'radial-gradient(circle, rgba(148,163,184,0.08) 0%, transparent 70%)' }} />
-                <div className="absolute bottom-1/4 left-1/3 w-[200px] lg:w-[300px] h-[200px] lg:h-[300px] rounded-full" style={{ background: 'radial-gradient(circle, rgba(16,185,129,0.05) 0%, transparent 70%)' }} />
+                {/* Subtle internal bottom shadow */}
+                <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-obsidian via-obsidian/40 to-transparent pointer-events-none" />
+
+                {/* ── SAFELY CONTAINED FLOATING SATELLITE CHIPS (NEVER CLIPPED) ── */}
+                
+                {/* Top Floating Badge */}
+                <div className="absolute top-3 left-3 px-3 py-1.5 rounded-xl apple-liquid-card border border-gold/40 shadow-glass-gold flex items-center gap-2 backdrop-blur-2xl z-20">
+                  <div className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                  <span className="text-[11px] font-mono text-white/90 font-medium whitespace-nowrap">
+                    WebSocket Real-Time
+                  </span>
+                </div>
+
+                {/* Bottom-Right Floating Badge */}
+                <div className="absolute bottom-3 right-3 px-3 py-1.5 rounded-xl apple-liquid-card border border-white/20 shadow-2xl flex items-center gap-1.5 backdrop-blur-2xl z-20">
+                  <GraduationCap className="w-3.5 h-3.5 text-gold-light" />
+                  <span className="text-[11px] font-mono text-gold-light font-semibold whitespace-nowrap">
+                    Sem 6 CS Pre-Final
+                  </span>
+                </div>
+
+                {/* Bottom-Left Floating Badge */}
+                <div className="absolute bottom-3 left-3 px-2.5 py-1.5 rounded-xl apple-liquid-card border border-white/15 text-[10px] font-mono text-sapphire-light flex items-center gap-1 backdrop-blur-xl z-10">
+                  <ShieldCheck className="w-3 h-3 text-sapphire-light" />
+                  <span>Production Ready</span>
+                </div>
               </div>
             </motion.div>
           </motion.div>
+
         </div>
       </div>
-
-      {/* ── Scroll indicator ── */}
-      <motion.div
-        style={{ opacity: indicatorOpacity }}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2"
-      >
-        <span className="text-[10px] font-mono tracking-[0.2em] uppercase text-white/20">
-          Scroll
-        </span>
-        <ChevronDown className="w-4 h-4 text-white/30 animate-bounce-subtle" />
-      </motion.div>
     </section>
   );
 }
