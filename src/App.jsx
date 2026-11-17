@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PerformanceProvider } from "./context/PerformanceContext";
 import LiquidAuroraBackground from "./components/ui/LiquidAuroraBackground";
@@ -20,9 +20,27 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [heroReady, setHeroReady] = useState(false);
 
+  // Guarantee page ALWAYS opens at the absolute top (Hero) on cold load and refresh
+  useEffect(() => {
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
+    }
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+
+    // Clear any hash on cold start so browser doesn't jump down
+    if (window.location.hash) {
+      window.history.replaceState(null, "", window.location.pathname);
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    }
+  }, []);
+
   const handleLoaderComplete = () => {
     setLoading(false);
-    setTimeout(() => setHeroReady(true), 50);
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    setTimeout(() => {
+      setHeroReady(true);
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    }, 50);
   };
 
   return (
