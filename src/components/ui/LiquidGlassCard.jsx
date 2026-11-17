@@ -16,6 +16,7 @@ export default function LiquidGlassCard({
   variant = "default", // default | gold | sapphire
   interactive = true,
   onClick,
+  ...rest
 }) {
   const { isEcoMode } = usePerformance();
   const cardRef = useRef(null);
@@ -75,6 +76,7 @@ export default function LiquidGlassCard({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onClick={onClick}
+      {...rest}
       style={
         !isEcoMode && interactive
           ? {
@@ -102,4 +104,3 @@ export default function LiquidGlassCard({
     </motion.div>
   );
 }
-

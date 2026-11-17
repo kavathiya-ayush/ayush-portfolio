@@ -125,6 +125,7 @@ export default function FeaturedWork() {
                   className="max-md:w-[86vw] max-md:snap-center shrink-0 flex flex-col"
                 >
                   <LiquidGlassCard
+                    data-cursor="project"
                     glowColor={project.accentColor}
                     className="p-6 sm:p-8 flex flex-col h-full cursor-pointer group"
                     onClick={() => setActiveProject(project)}

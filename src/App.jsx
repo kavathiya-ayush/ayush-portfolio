@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PerformanceProvider } from "./context/PerformanceContext";
 import LiquidAuroraBackground from "./components/ui/LiquidAuroraBackground";
+import CustomCursor from "./components/ui/CustomCursor";
 import Loader from "./components/ui/Loader";
 import Toast from "./components/ui/Toast";
 import ResumeModal from "./components/ui/ResumeModal";
@@ -26,6 +27,9 @@ export default function App() {
 
   return (
     <PerformanceProvider>
+      {/* ── Apple Liquid Magnetic Custom Cursor ── */}
+      <CustomCursor />
+
       {/* ── Dynamic Island Toast & In-Browser Resume Modal ── */}
       <Toast />
       <ResumeModal />
