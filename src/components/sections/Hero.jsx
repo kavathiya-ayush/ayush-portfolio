@@ -1,295 +1,429 @@
 import { useRef } from "react";
-import { motion, useScroll, useTransform, useMotionValue, useSpring } from "framer-motion";
-import { ChevronDown, ArrowUpRight, FileText, Sparkles, GraduationCap, ShieldCheck, Zap } from "lucide-react";
-import { usePerformance } from "../../context/PerformanceContext";
+import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
+import { ArrowUpRight, FileText, Github, Linkedin, Mail } from "lucide-react";
+import { usePerformanceActions } from "../../context/PerformanceContext";
+import { useMediaQuery } from "../../hooks/useMediaQuery";
 import { playTactileClick } from "../../utils/audio";
+import { loadResumeModal } from "../../utils/prefetch";
+import Magnetic from "../ui/Magnetic";
+import { profile } from "../../data/portfolio";
 
-const textLine = {
-  hidden: { opacity: 0, y: 35, filter: "blur(6px)" },
-  show: {
+const REVEAL_LINE_REDUCED = {
+  hidden: { opacity: 1 },
+  show: { opacity: 1, transition: { duration: 0 } },
+};
+const REVEAL_LINE_FULL = {
+  hidden: { y: "105%", opacity: 0 },
+  show: (delay = 0) => ({
+    y: "0%",
     opacity: 1,
-    y: 0,
-    filter: "blur(0px)",
-    transition: { duration: 0.75, ease: [0.16, 1, 0.3, 1] },
-  },
+    transition: { duration: 0.85, delay, ease: [0.16, 1, 0.3, 1] },
+  }),
 };
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 20 },
-  show: {
+const FADE_REDUCED = {
+  hidden: { opacity: 1 },
+  show: { opacity: 1, transition: { duration: 0 } },
+};
+const FADE_FULL = {
+  hidden: { opacity: 0, y: 14 },
+  show: (delay = 0) => ({
     opacity: 1,
     y: 0,
-    transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] },
-  },
+    transition: { duration: 0.7, delay, ease: [0.16, 1, 0.3, 1] },
+  }),
 };
 
-export default function Hero({ heroReady }) {
-  const { isEcoMode, setIsResumeOpen } = usePerformance();
+export default function Hero({ heroReady = true }) {
+  const { setIsResumeOpen } = usePerformanceActions();
+  const shouldReduceMotion = useReducedMotion();
+  const isDesktop = useMediaQuery("(min-width: 1024px)");
   const sectionRef = useRef(null);
-  const cardRef = useRef(null);
 
-  // 3D Perspective Tilt for the Portrait Sculpture
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-
-  const rotateX = useSpring(useTransform(mouseY, [-0.5, 0.5], ["7deg", "-7deg"]), {
-    stiffness: 260,
-    damping: 25,
-  });
-  const rotateY = useSpring(useTransform(mouseX, [-0.5, 0.5], ["-7deg", "7deg"]), {
-    stiffness: 260,
-    damping: 25,
-  });
-
-  const handleMouseMove = (e) => {
-    if (!cardRef.current || isEcoMode) return;
-    const rect = cardRef.current.getBoundingClientRect();
-    const xPct = (e.clientX - rect.left) / rect.width - 0.5;
-    const yPct = (e.clientY - rect.top) / rect.height - 0.5;
-    mouseX.set(xPct);
-    mouseY.set(yPct);
-  };
-
-  const handleMouseLeave = () => {
-    mouseX.set(0);
-    mouseY.set(0);
-  };
-
-  // Scroll parallax
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ["start start", "end start"],
   });
 
-  const portraitY = useTransform(scrollYProgress, [0, 1], [0, isEcoMode ? 0 : -80]);
-  const portraitOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0.1]);
+  // Subtle cinematic parallax on the full-bleed background banner
+  const bannerY = useTransform(
+    scrollYProgress,
+    [0, 1],
+    [0, shouldReduceMotion ? 0 : -48]
+  );
+  const bannerScale = useTransform(
+    scrollYProgress,
+    [0, 1],
+    [1, shouldReduceMotion ? 1 : 1.045]
+  );
+  const contentY = useTransform(
+    scrollYProgress,
+    [0, 1],
+    [0, shouldReduceMotion ? 0 : 24]
+  );
+
+  const revealLine = shouldReduceMotion ? REVEAL_LINE_REDUCED : REVEAL_LINE_FULL;
+  const fadeEditorial = shouldReduceMotion ? FADE_REDUCED : FADE_FULL;
+  const revealTarget = heroReady ? "show" : "hidden";
 
   return (
     <section
       ref={sectionRef}
       id="home"
-      className="relative min-h-[92svh] flex items-center justify-center pt-24 sm:pt-28 pb-12 sm:pb-16"
+      className="relative min-h-[100svh] flex flex-col justify-between overflow-hidden pt-24 sm:pt-24 lg:pt-24 pb-24 md:pb-10 lg:pb-7 px-5 sm:px-10"
     >
-      <div className="relative z-10 w-full max-w-[1360px] mx-auto px-6 sm:px-10 lg:px-14">
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-10 lg:gap-12">
-          
-          {/* ── LEFT COLUMN: High-Fashion Tech Editorial ── */}
-          <div className="flex-1 flex flex-col justify-center max-w-2xl text-left">
-            <motion.div
-              initial="hidden"
-              animate={heroReady ? "show" : "hidden"}
-              variants={{
-                hidden: {},
-                show: { transition: { staggerChildren: 0.08, delayChildren: 0.1 } },
-              }}
-            >
-              {/* Dynamic Island Status Pill */}
-              <motion.div
-                variants={fadeUp}
-                className="inline-flex items-center gap-2 rounded-full apple-liquid-card px-3.5 py-1 text-xs font-mono text-gold-light mb-4 shadow-glass-gold"
-              >
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse ring-2 ring-emerald-400/40" />
-                <span className="tracking-wide">Pre-Final Year CS • Semester 6</span>
-                <span className="text-white/20">|</span>
-                <span className="text-white/80 hidden xs:inline">Open for SDE Intern</span>
-                <Sparkles className="w-3.5 h-3.5 text-gold-light" />
-              </motion.div>
-
-              {/* Massive Editorial Name */}
-              <div className="flex flex-col tracking-tight leading-none mb-3">
-                <div className="overflow-hidden">
-                  <motion.h1
-                    variants={textLine}
-                    className="font-display font-extrabold text-[2.8rem] sm:text-5xl md:text-6xl lg:text-[4.6rem] tracking-tight text-white leading-[0.95]"
-                  >
-                    AYUSH
-                  </motion.h1>
-                </div>
-                <div className="overflow-hidden mt-1">
-                  <motion.h1
-                    variants={textLine}
-                    className="font-display font-extrabold text-[2.8rem] sm:text-5xl md:text-6xl lg:text-[4.6rem] tracking-tight shimmer-text-gold leading-[0.95]"
-                  >
-                    KAVATHIYA.
-                  </motion.h1>
-                </div>
-              </div>
-
-              {/* Sub-Headline & Pitch */}
-              <motion.p
-                variants={fadeUp}
-                className="text-base sm:text-lg lg:text-xl text-white/90 font-medium leading-relaxed max-w-xl"
-              >
-                Full-Stack Software Engineer & Multi-Platform Systems Builder.
-              </motion.p>
-
-              <motion.p
-                variants={fadeUp}
-                className="mt-2 text-xs sm:text-sm text-white/55 leading-relaxed max-w-lg font-light"
-              >
-                Building production-grade web services, native Android mobile apps, and Python desktop automation utilities engineered for speed and reliability.
-              </motion.p>
-
-              {/* ── Apple VisionOS Spatial Metrics Capsule ── */}
-              <motion.div
-                variants={fadeUp}
-                className="mt-5 p-1.5 rounded-2xl apple-liquid-card max-w-xl shadow-glass-sm"
-              >
-                <div className="grid grid-cols-3 divide-x divide-white/[0.08] text-center">
-                  <div className="p-2 sm:p-2.5">
-                    <div className="font-display font-extrabold text-2xl sm:text-3xl text-gold-light">
-                      4+
-                    </div>
-                    <div className="text-[10px] sm:text-[11px] font-mono text-white/50 mt-0.5">
-                      Live Systems
-                    </div>
-                    <div className="mt-0.5 text-[9px] font-mono text-emerald-400 font-semibold uppercase tracking-wider">
-                      ● 100% Deployed
-                    </div>
-                  </div>
-
-                  <div className="p-2 sm:p-2.5">
-                    <div className="font-display font-extrabold text-2xl sm:text-3xl text-sapphire-light">
-                      3
-                    </div>
-                    <div className="text-[10px] sm:text-[11px] font-mono text-white/50 mt-0.5">
-                      Platforms
-                    </div>
-                    <div className="mt-0.5 text-[9px] font-mono text-white/40 uppercase tracking-wider">
-                      Web • App • PC
-                    </div>
-                  </div>
-
-                  <div className="p-2 sm:p-2.5">
-                    <div className="font-display font-extrabold text-2xl sm:text-3xl text-white">
-                      Sem 6
-                    </div>
-                    <div className="text-[10px] sm:text-[11px] font-mono text-white/50 mt-0.5">
-                      B.Tech CS
-                    </div>
-                    <div className="mt-0.5 text-[9px] font-mono text-gold-light/90 uppercase tracking-wider">
-                      Summer / Fall '26
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* ── Apple Liquid Glass CTAs (Always Visible Above Fold) ── */}
-              <motion.div
-                variants={fadeUp}
-                className="mt-6 flex flex-wrap items-center gap-3"
-              >
-                <motion.a
-                  href="#work"
-                  onClick={() => playTactileClick("light")}
-                  whileHover={{ scale: 1.03, y: -2 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="group relative inline-flex items-center gap-2 rounded-xl apple-liquid-gold-button px-5 py-3 text-sm font-bold text-gold-light tracking-wide hover:brightness-110 transition-all overflow-hidden"
-                >
-                  <span className="absolute inset-0 w-1/2 h-full bg-white/20 skew-x-12 -translate-x-full group-hover:translate-x-[300%] transition-transform duration-1000 ease-in-out" />
-                  <span className="relative z-10 text-white font-semibold">Explore Featured Systems</span>
-                  <ArrowUpRight className="w-4 h-4 text-gold-light relative z-10 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                </motion.a>
-
-                <motion.button
-                  onClick={() => {
-                    playTactileClick("success");
-                    setIsResumeOpen(true);
-                  }}
-                  whileHover={{ scale: 1.03, y: -2 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="inline-flex items-center gap-2 rounded-xl apple-liquid-glass-button px-4 py-3 text-sm font-semibold text-white/90 hover:text-white hover:border-gold/40 transition-all shadow-glass-sm"
-                >
-                  <FileText className="w-4 h-4 text-gold-light" />
-                  <span>Interactive CV</span>
-                </motion.button>
-
-                <motion.a
-                  href="#terminal"
-                  onClick={() => playTactileClick("light")}
-                  whileHover={{ scale: 1.03, y: -2 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="inline-flex items-center gap-1.5 rounded-xl px-3 py-3 text-xs font-mono text-white/50 hover:text-white transition-colors"
-                >
-                  <Zap className="w-3.5 h-3.5 text-sapphire-light" />
-                  <span>Terminal CLI</span>
-                </motion.a>
-              </motion.div>
-            </motion.div>
-          </div>
-
-          {/* ── RIGHT COLUMN: Spatial VisionOS Glass Portrait Rig ── */}
-          <motion.div
-            style={{ y: portraitY, opacity: portraitOpacity }}
-            className="flex-1 flex items-center justify-center relative w-full max-w-[380px] lg:max-w-[440px]"
+      {/* ── DESKTOP FULL-BLEED CINEMATIC HERO BANNER BACKGROUND (mounted only >= 1024px) ── */}
+      {isDesktop && (
+        <>
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 z-0 overflow-hidden select-none"
           >
             <motion.div
-              ref={cardRef}
-              onMouseMove={handleMouseMove}
-              onMouseLeave={handleMouseLeave}
               style={
-                !isEcoMode
-                  ? {
-                      rotateX,
-                      rotateY,
-                      transformStyle: "preserve-3d",
-                    }
-                  : undefined
+                shouldReduceMotion
+                  ? undefined
+                  : { y: bannerY, scale: bannerScale }
               }
-              className="relative w-full aspect-[4/5] rounded-[2rem] apple-liquid-card p-3 shadow-2xl transition-all duration-300"
+              initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, scale: 1.03 }}
+              animate={
+                heroReady
+                  ? { opacity: 1, scale: 1 }
+                  : { opacity: 0, scale: shouldReduceMotion ? 1 : 1.03 }
+              }
+              transition={{ duration: shouldReduceMotion ? 0.2 : 1.05, ease: [0.16, 1, 0.3, 1] }}
+              className="absolute inset-y-0 left-[14%] xl:left-[18%] right-0"
             >
-              {/* Backlight Atmospheric Volumetric Aura */}
-              <div className="absolute inset-0 -z-10 rounded-[2rem] bg-gradient-to-tr from-gold/30 via-sapphire/25 to-transparent blur-3xl opacity-90" />
-
-              {/* Frameless Fluid Photo Canvas */}
-              <div className="relative w-full h-full rounded-2xl overflow-hidden bg-gradient-to-b from-white/[0.04] to-obsidian/90 border border-white/10 flex items-center justify-center">
+              <picture className="block w-full h-full">
+                <source srcSet="/hero-banner.avif" type="image/avif" />
+                <source srcSet="/hero-banner.webp" type="image/webp" />
                 <img
-                  src="/hero-portrait.jpeg"
-                  alt="Ayush Kavathiya"
-                  className="w-full h-full object-cover object-top filter brightness-[1.03] contrast-[1.04] portrait-mask"
-                  onError={(e) => {
-                    e.target.style.display = "none";
-                    e.target.nextSibling.style.display = "flex";
-                  }}
+                  src="/hero-banner.jpg"
+                  alt=""
+                  width={1536}
+                  height={1024}
+                  fetchPriority="high"
+                  decoding="async"
+                  loading="eager"
+                  className="w-full h-full object-cover object-[56%_14%]"
                 />
-                {/* Fallback Monogram Avatar */}
-                <div className="hidden absolute inset-0 items-center justify-center bg-gradient-to-br from-obsidian-100 to-obsidian">
-                  <span className="font-display text-8xl font-black text-gold-light/25 select-none">
-                    AK
-                  </span>
-                </div>
-
-                {/* Subtle internal bottom shadow */}
-                <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-obsidian via-obsidian/40 to-transparent pointer-events-none" />
-
-                {/* ── SAFELY CONTAINED FLOATING SATELLITE CHIPS (NEVER CLIPPED) ── */}
-                
-                {/* Top Floating Badge */}
-                <div className="absolute top-3 left-3 px-3 py-1.5 rounded-xl apple-liquid-card border border-gold/40 shadow-glass-gold flex items-center gap-2 backdrop-blur-2xl z-20">
-                  <div className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                  <span className="text-[11px] font-mono text-white/90 font-medium whitespace-nowrap">
-                    WebSocket Real-Time
-                  </span>
-                </div>
-
-                {/* Bottom-Right Floating Badge */}
-                <div className="absolute bottom-3 right-3 px-3 py-1.5 rounded-xl apple-liquid-card border border-white/20 shadow-2xl flex items-center gap-1.5 backdrop-blur-2xl z-20">
-                  <GraduationCap className="w-3.5 h-3.5 text-gold-light" />
-                  <span className="text-[11px] font-mono text-gold-light font-semibold whitespace-nowrap">
-                    Sem 6 CS Pre-Final
-                  </span>
-                </div>
-
-                {/* Bottom-Left Floating Badge */}
-                <div className="absolute bottom-3 left-3 px-2.5 py-1.5 rounded-xl apple-liquid-card border border-white/15 text-[10px] font-mono text-sapphire-light flex items-center gap-1 backdrop-blur-xl z-10">
-                  <ShieldCheck className="w-3 h-3 text-sapphire-light" />
-                  <span>Production Ready</span>
-                </div>
-              </div>
+              </picture>
             </motion.div>
+
+            {/* Silky Left-to-Right Editorial Obsidian Scrim for crisp typography legibility */}
+            <div
+              className="absolute inset-0"
+              style={{
+                background:
+                  "linear-gradient(90deg, #0B0B0D 0%, #0B0B0D 25%, rgba(11,11,13,0.92) 38%, rgba(11,11,13,0.48) 52%, rgba(11,11,13,0.08) 68%, rgba(11,11,13,0.06) 88%, rgba(11,11,13,0.55) 100%)",
+              }}
+            />
+
+            {/* Top Navbar Clearance & Bottom Seamless Transition Masks */}
+            <div
+              className="absolute inset-x-0 top-0 h-32"
+              style={{
+                background:
+                  "linear-gradient(180deg, rgba(11,11,13,0.78) 0%, rgba(11,11,13,0.22) 55%, transparent 100%)",
+              }}
+            />
+            <div
+              className="absolute inset-x-0 bottom-0 h-44"
+              style={{
+                background:
+                  "linear-gradient(0deg, #0B0B0D 0%, rgba(11,11,13,0.88) 28%, rgba(11,11,13,0.35) 65%, transparent 100%)",
+              }}
+            />
+          </div>
+
+          {/* Subtle Optical Loupe Hover Zone over Desktop Portrait Area */}
+          <div
+            aria-hidden="true"
+            data-cursor="image"
+            className="absolute top-24 bottom-24 right-14 w-[42%] z-[5]"
+          />
+
+          {/* Right-Edge Vertical Editorial Metadata (Desktop) */}
+          <motion.div
+            aria-hidden="true"
+            variants={fadeEditorial}
+            custom={0.46}
+            initial="hidden"
+            animate={revealTarget}
+            className="hidden xl:flex items-center gap-3 absolute right-6 top-1/2 -translate-y-1/2 z-20 pointer-events-none select-none"
+            style={{ writingMode: "vertical-rl" }}
+          >
+            <span className="font-mono text-[10px] uppercase tracking-[0.34em] text-stone-dark/75">
+              Developer · Creator · Learner
+            </span>
+          </motion.div>
+        </>
+      )}
+
+      {/* ── MAIN FOREGROUND EDITORIAL CONTENT ── */}
+      <div className="relative z-10 w-full max-w-[1320px] mx-auto flex-1 flex flex-col justify-between">
+        {/* Main Hero Left Content Column */}
+        <motion.div
+          style={shouldReduceMotion ? undefined : { y: contentY }}
+          className="my-auto py-3 sm:py-6 lg:py-4 max-w-xl xl:max-w-[600px]"
+        >
+          {/* Minimalist CLI Prompt Tag */}
+          <motion.div
+            variants={fadeEditorial}
+            custom={0.05}
+            initial="hidden"
+            animate={revealTarget}
+            className="inline-flex items-center gap-2 font-mono text-[11.5px] sm:text-xs text-stone-dark tracking-wider mb-3.5 sm:mb-4"
+          >
+            <span className="text-champagne/75">&gt;</span>
+            <span className="text-stone">portfolio.exe --open</span>
+            <span
+              aria-hidden="true"
+              className={`inline-block w-1.5 h-3.5 bg-champagne-light/85 ${
+                shouldReduceMotion ? "" : "animate-caret-blink"
+              }`}
+            />
           </motion.div>
 
-        </div>
+          {/* Availability Capsule */}
+          <motion.div
+            variants={fadeEditorial}
+            custom={0.1}
+            initial="hidden"
+            animate={revealTarget}
+            className="mb-5 sm:mb-6"
+          >
+            <span className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full border border-porcelain/15 bg-obsidian/75 backdrop-blur-md font-mono text-[11px] tracking-wide text-porcelain/90">
+              <span
+                className={`w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.7)] ${
+                  shouldReduceMotion ? "" : "animate-pulse"
+                }`}
+              />
+              <span>{profile.availability}</span>
+            </span>
+          </motion.div>
+
+          {/* Editorial Italic Greeting + Hairline */}
+          <motion.div
+            variants={fadeEditorial}
+            custom={0.15}
+            initial="hidden"
+            animate={revealTarget}
+            className="flex items-center gap-4 mb-2"
+          >
+            <span className="font-serif italic text-xl sm:text-2xl text-porcelain/80 font-light">
+              Hi, I&apos;m
+            </span>
+            <span
+              aria-hidden="true"
+              className="w-20 sm:w-28 h-px bg-gradient-to-r from-champagne/75 to-transparent"
+            />
+          </motion.div>
+
+          {/* Oversized Stacked Cormorant Garamond Name */}
+          <h1 className="font-serif text-[clamp(3.35rem,7.8vw,6.8rem)] leading-[0.94] tracking-[-0.02em] font-normal select-none">
+            <span className="block overflow-hidden pb-1">
+              <motion.span
+                variants={revealLine}
+                custom={0.18}
+                initial="hidden"
+                animate={revealTarget}
+                className="block text-porcelain"
+              >
+                Ayush
+              </motion.span>
+            </span>
+            <span className="block overflow-hidden pb-2">
+              <motion.span
+                variants={revealLine}
+                custom={0.26}
+                initial="hidden"
+                animate={revealTarget}
+                className="block bg-gradient-to-r from-champagne-pale via-champagne to-[#A88246] bg-clip-text text-transparent"
+              >
+                Kavathiya
+              </motion.span>
+            </span>
+          </h1>
+
+          {/* Role Subtitle + Hairline Rule */}
+          <motion.div
+            variants={fadeEditorial}
+            custom={0.34}
+            initial="hidden"
+            animate={revealTarget}
+            className="mt-4 sm:mt-5 space-y-4"
+          >
+            <p className="font-sans text-xs sm:text-[13px] uppercase tracking-[0.28em] text-porcelain/85 font-normal">
+              {profile.role}
+            </p>
+            <div className="w-56 sm:w-72 h-px bg-gradient-to-r from-porcelain/25 via-champagne/40 to-transparent" />
+          </motion.div>
+
+          {/* Concise Factual Introduction */}
+          <motion.div
+            variants={fadeEditorial}
+            custom={0.4}
+            initial="hidden"
+            animate={revealTarget}
+            className="mt-5 space-y-1 text-sm sm:text-[15.5px] text-porcelain/80 font-light leading-relaxed max-w-md"
+          >
+            <p>
+              {profile.degreeShort} · {profile.university}
+            </p>
+            <p className="text-stone">
+              Building practical web platforms, databases &amp; desktop software
+            </p>
+          </motion.div>
+
+          {/* Luxury Ringed Pill Action Row */}
+          <motion.div
+            variants={fadeEditorial}
+            custom={0.46}
+            initial="hidden"
+            animate={revealTarget}
+            className="mt-7 sm:mt-9 flex flex-wrap items-center gap-3.5 sm:gap-4"
+          >
+            <Magnetic strength={0.22} maxOffset={6}>
+              <a
+                href="#work"
+                data-cursor="magnetic"
+                onClick={() => playTactileClick("light")}
+                className="group relative inline-flex items-center gap-3 rounded-full border border-champagne/75 bg-obsidian/80 hover:bg-champagne/[0.14] px-6 py-3 text-xs sm:text-[13.5px] font-medium text-porcelain tracking-wide shadow-[0_0_30px_-8px_rgba(201,169,110,0.5)] hover:shadow-[0_0_36px_-6px_rgba(201,169,110,0.68)] transition-all duration-300"
+              >
+                <span>Explore My Work</span>
+                <span className="flex items-center justify-center w-6 h-6 rounded-full border border-champagne/60 text-champagne-light group-hover:bg-champagne group-hover:text-obsidian transition-colors">
+                  <ArrowUpRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 motion-reduce:transform-none" />
+                </span>
+              </a>
+            </Magnetic>
+
+            <Magnetic strength={0.2} maxOffset={6}>
+              <button
+                type="button"
+                data-cursor="magnetic"
+                onPointerEnter={loadResumeModal}
+                onFocus={loadResumeModal}
+                onClick={() => {
+                  playTactileClick("light");
+                  setIsResumeOpen(true);
+                }}
+                className="inline-flex items-center gap-2.5 rounded-full border border-porcelain/22 hover:border-champagne/55 bg-obsidian/65 hover:bg-obsidian-elevated px-6 py-3 text-xs sm:text-[13.5px] font-medium text-porcelain/90 hover:text-champagne-light transition-all duration-300"
+              >
+                <span>View Resume</span>
+                <FileText className="w-3.5 h-3.5 text-champagne" />
+              </button>
+            </Magnetic>
+          </motion.div>
+
+          {/* Minimalist Hairline-Divided Social Row */}
+          <motion.div
+            variants={fadeEditorial}
+            custom={0.52}
+            initial="hidden"
+            animate={revealTarget}
+            className="mt-6 sm:mt-7 flex items-center gap-4 text-porcelain/75"
+          >
+            <a
+              href={profile.github}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-cursor="magnetic"
+              aria-label="GitHub Profile"
+              className="p-1.5 hover:text-champagne-light transition-colors"
+            >
+              <Github className="w-4 h-4" />
+            </a>
+            <span aria-hidden="true" className="w-px h-4 bg-porcelain/15" />
+            <a
+              href={profile.linkedin}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-cursor="magnetic"
+              aria-label="LinkedIn Profile"
+              className="p-1.5 hover:text-champagne-light transition-colors"
+            >
+              <Linkedin className="w-4 h-4" />
+            </a>
+            <span aria-hidden="true" className="w-px h-4 bg-porcelain/15" />
+            <a
+              href={`mailto:${profile.email}`}
+              data-cursor="magnetic"
+              aria-label={`Email ${profile.email}`}
+              className="p-1.5 hover:text-champagne-light transition-colors"
+            >
+              <Mail className="w-4 h-4" />
+            </a>
+          </motion.div>
+        </motion.div>
+
+        {/* ── MOBILE SEAMLESS FULL-BLEED HERO BANNER (mounted only < 1024px) ── */}
+        {!isDesktop && (
+          <motion.div
+            variants={fadeEditorial}
+            custom={0.35}
+            initial="hidden"
+            animate={revealTarget}
+            className="relative -mx-5 sm:-mx-10 mt-6 mb-2 overflow-hidden"
+          >
+            <div className="relative aspect-[3/2] w-full bg-[#0B0B0D]">
+              <picture className="block w-full h-full">
+                <source srcSet="/hero-banner-mobile.avif" type="image/avif" />
+                <source srcSet="/hero-banner-mobile.webp" type="image/webp" />
+                <img
+                  src="/hero-banner.jpg"
+                  alt={`${profile.name} — ${profile.role}`}
+                  width={960}
+                  height={640}
+                  fetchPriority="high"
+                  decoding="async"
+                  loading="eager"
+                  className="w-full h-full object-cover object-[54%_18%]"
+                />
+              </picture>
+              {/* Seamless top & bottom obsidian feathers */}
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-[#0B0B0D] to-transparent"
+              />
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[#0B0B0D] via-[#0B0B0D]/60 to-transparent"
+              />
+            </div>
+          </motion.div>
+        )}
+
+        {/* ── Bottom Editorial Scroll Prompt with Signature Orbital Ring ── */}
+        <motion.div
+          variants={fadeEditorial}
+          custom={0.56}
+          initial="hidden"
+          animate={revealTarget}
+          className="flex items-center justify-between pt-4"
+        >
+          <a
+            href="#about"
+            data-cursor="magnetic"
+            className="group inline-flex items-center gap-3.5 font-mono text-[11px] uppercase tracking-[0.2em] text-stone hover:text-champagne-light transition-colors"
+          >
+            <span>Scroll to explore</span>
+            <span
+              aria-hidden="true"
+              className="w-12 sm:w-16 h-px bg-porcelain/20 group-hover:bg-champagne/60 transition-colors"
+            />
+            <span
+              aria-hidden="true"
+              className="w-4 h-4 rounded-full border border-champagne/60 flex items-center justify-center group-hover:scale-110 transition-transform motion-reduce:transform-none"
+            >
+              <span className="w-1 h-1 rounded-full bg-champagne-light" />
+            </span>
+          </a>
+
+          <span className="hidden sm:inline font-mono text-[10.5px] uppercase tracking-[0.2em] text-stone-dark">
+            {profile.location} · {profile.languages.join(" / ")}
+          </span>
+        </motion.div>
       </div>
     </section>
   );

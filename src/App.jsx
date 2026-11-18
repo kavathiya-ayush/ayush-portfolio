@@ -1,113 +1,355 @@
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { PerformanceProvider } from "./context/PerformanceContext";
-import LiquidAuroraBackground from "./components/ui/LiquidAuroraBackground";
-import CustomCursor from "./components/ui/CustomCursor";
-import Loader from "./components/ui/Loader";
+import { useEffect, useState, useCallback, useRef, lazy, Suspense } from "react";
+import { MotionConfig } from "framer-motion";
+import {
+  PerformanceProvider,
+  usePerformanceActions,
+  useOverlayState,
+} from "./context/PerformanceContext";
+import PointerEnvironment from "./components/ui/PointerEnvironment";
+import ScrollProgress from "./components/ui/ScrollProgress";
+import AKCalibration, { shouldRunAKCalibration } from "./components/ui/AKCalibration";
 import Toast from "./components/ui/Toast";
-import ResumeModal from "./components/ui/ResumeModal";
 import Navbar from "./components/layout/Navbar";
 import MobileNav from "./components/layout/MobileNav";
 import Hero from "./components/sections/Hero";
 import WhyHireMe from "./components/sections/WhyHireMe";
-import InteractiveTerminal from "./components/ui/InteractiveTerminal";
 import FeaturedWork from "./components/sections/FeaturedWork";
 import Stack from "./components/sections/Stack";
 import Timeline from "./components/sections/Timeline";
 import Contact from "./components/sections/Contact";
+import { profile } from "./data/portfolio";
+import {
+  loadResumeModal,
+  loadFastPassModal,
+  loadInteractiveTerminal,
+} from "./utils/prefetch";
 
-export default function App() {
-  const [loading, setLoading] = useState(true);
-  const [heroReady, setHeroReady] = useState(false);
+const CustomCursor = lazy(() => import("./components/ui/CustomCursor"));
+const ResumeModal = lazy(loadResumeModal);
+const RecruiterFastPassModal = lazy(loadFastPassModal);
+const InteractiveTerminal = lazy(loadInteractiveTerminal);
 
-  // Guarantee page ALWAYS opens at the absolute top (Hero) on cold load and refresh
+const TRACKED_SECTIONS = [
+  "home",
+  "about",
+  "work",
+  "terminal",
+  "skills",
+  "journey",
+  "contact",
+];
+
+/**
+ * Mounts CustomCursor chunk ONLY on fine-pointer non-reduced-motion devices.
+ * Mobile smartphones never download or parse CustomCursor JavaScript.
+ */
+function DesktopCursorHost() {
+  const [eligible, setEligible] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return (
+      window.matchMedia("(pointer: fine)").matches &&
+      !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    );
+  });
+
+  useEffect(() => {
+    const fine = window.matchMedia("(pointer: fine)");
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const sync = () => setEligible(fine.matches && !reduced.matches);
+    fine.addEventListener("change", sync);
+    reduced.addEventListener("change", sync);
+    return () => {
+      fine.removeEventListener("change", sync);
+      reduced.removeEventListener("change", sync);
+    };
+  }, []);
+
+  if (!eligible) return null;
+  return (
+    <Suspense fallback={null}>
+      <CustomCursor />
+    </Suspense>
+  );
+}
+
+/**
+ * Isolated Modal Host so opening/closing Resume or Recruiter Fast Pass
+ * never re-renders the main portfolio sections.
+ */
+function LazyModalHost() {
+  const { isResumeOpen, isFastPassOpen } = useOverlayState();
+  const [resumeMounted, setResumeMounted] = useState(false);
+  const [fastPassMounted, setFastPassMounted] = useState(false);
+
+  useEffect(() => {
+    if (isResumeOpen && !resumeMounted) setResumeMounted(true);
+  }, [isResumeOpen, resumeMounted]);
+
+  useEffect(() => {
+    if (isFastPassOpen && !fastPassMounted) setFastPassMounted(true);
+  }, [isFastPassOpen, fastPassMounted]);
+
+  return (
+    <>
+      {resumeMounted && (
+        <Suspense fallback={null}>
+          <ResumeModal />
+        </Suspense>
+      )}
+      {fastPassMounted && (
+        <Suspense fallback={null}>
+          <RecruiterFastPassModal />
+        </Suspense>
+      )}
+    </>
+  );
+}
+
+/**
+ * Lazy-mounted Terminal section that preserves exact anchor target & vertical height
+ * (CLS = 0) and loads well before entering the viewport (or immediately on /#terminal).
+ */
+function DeferredTerminalSection() {
+  const anchorRef = useRef(null);
+  const [shouldLoad, setShouldLoad] = useState(() => {
+    if (typeof window === "undefined") return true;
+    return window.location.hash === "#terminal";
+  });
+
+  useEffect(() => {
+    if (shouldLoad) return;
+    const node = anchorRef.current;
+    if (!node || typeof IntersectionObserver === "undefined") {
+      setShouldLoad(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setShouldLoad(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "700px 0px" }
+    );
+    observer.observe(node);
+
+    // Also prefetch chunk during idle time so navigating directly via navbar is instant
+    let idleId = null;
+    if ("requestIdleCallback" in window) {
+      idleId = window.requestIdleCallback(() => loadInteractiveTerminal(), {
+        timeout: 3000,
+      });
+    }
+
+    return () => {
+      observer.disconnect();
+      if (idleId !== null && "cancelIdleCallback" in window) {
+        window.cancelIdleCallback(idleId);
+      }
+    };
+  }, [shouldLoad]);
+
+  if (shouldLoad) {
+    return (
+      <Suspense
+        fallback={
+          <section
+            id="terminal"
+            aria-label="Interactive Console"
+            className="relative px-5 sm:px-10 py-24 sm:py-32 scroll-mt-24 border-t border-porcelain/[0.08] min-h-[720px]"
+          />
+        }
+      >
+        <InteractiveTerminal />
+      </Suspense>
+    );
+  }
+
+  return (
+    <section
+      ref={anchorRef}
+      id="terminal"
+      aria-label="Interactive Console"
+      className="relative px-5 sm:px-10 py-24 sm:py-32 scroll-mt-24 border-t border-porcelain/[0.08] min-h-[720px]"
+    />
+  );
+}
+
+function PortfolioShell() {
+  // Subscribes ONLY to stable actions -> scrolling across sections triggers 0 root re-renders
+  const { setActiveSection } = usePerformanceActions();
+  const [calibrationActive, setCalibrationActive] = useState(() =>
+    shouldRunAKCalibration()
+  );
+  const [heroReady, setHeroReady] = useState(() => !shouldRunAKCalibration());
+
+  const handleRevealHero = useCallback(() => setHeroReady(true), []);
+  const handleCalibrationComplete = useCallback(() => {
+    setCalibrationActive(false);
+    setHeroReady(true);
+  }, []);
+
+  // Respect direct valid section anchor URLs (e.g. /#work, /#contact);
+  // open cleanly at the top on cold loads with no hash or #home
   useEffect(() => {
     if ("scrollRestoration" in window.history) {
       window.history.scrollRestoration = "manual";
     }
-    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
 
-    // Clear any hash on cold start so browser doesn't jump down
-    if (window.location.hash) {
-      window.history.replaceState(null, "", window.location.pathname);
-      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    const hashId = window.location.hash.replace(/^#/, "");
+    if (hashId && hashId !== "home" && TRACKED_SECTIONS.includes(hashId)) {
+      const target = document.getElementById(hashId);
+      if (target) {
+        setActiveSection(hashId);
+        const scrollToTarget = () => {
+          target.scrollIntoView({ behavior: "instant", block: "start" });
+        };
+        requestAnimationFrame(() => {
+          scrollToTarget();
+          requestAnimationFrame(scrollToTarget);
+        });
+        return;
+      }
     }
-  }, []);
 
-  const handleLoaderComplete = () => {
-    setLoading(false);
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
-    setTimeout(() => {
-      setHeroReady(true);
-      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
-    }, 50);
-  };
+  }, [setActiveSection]);
+
+  // Section-aware active navigation observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveSection(entry.target.id);
+          }
+        });
+      },
+      {
+        root: null,
+        rootMargin: "-28% 0px -52% 0px",
+        threshold: 0,
+      }
+    );
+
+    TRACKED_SECTIONS.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, [setActiveSection]);
 
   return (
-    <PerformanceProvider>
-      {/* ── Apple Liquid Magnetic Custom Cursor ── */}
-      <CustomCursor />
+    <div className="relative bg-obsidian text-porcelain min-h-screen selection:bg-champagne/30 selection:text-porcelain">
+      {/* Global Matte Canvas & GPU-Composited Pointer Light Field */}
+      <PointerEnvironment />
 
-      {/* ── Dynamic Island Toast & In-Browser Resume Modal ── */}
+      {/* Signature Precision Pointer: The Orbital Lens (loaded only on desktop fine-pointer) */}
+      <DesktopCursorHost />
+
+      {/* Top Hairline Reading Progress */}
+      <ScrollProgress />
+
+      {/* Branded AK Calibration Opening Sequence (< 650ms, once per session) */}
+      <AKCalibration
+        active={calibrationActive}
+        onRevealHero={handleRevealHero}
+        onComplete={handleCalibrationComplete}
+      />
+
+      {/* Liquid Glass Floating Navigation & Overlays */}
+      <Navbar />
+      <MobileNav />
       <Toast />
-      <ResumeModal />
+      <LazyModalHost />
 
-      {/* ── Entrance Preloader ── */}
-      <Loader onComplete={handleLoaderComplete} />
+      {/* Continuous Editorial Scroll Experience */}
+      <main className="relative z-10">
+        <Hero heroReady={heroReady} />
+        <WhyHireMe />
+        <FeaturedWork />
+        <DeferredTerminalSection />
+        <Stack />
+        <Timeline />
+        <Contact />
+      </main>
 
-      {/* ── Luxury Site Shell with Luminous Fluid Liquid Aurora ── */}
-      <div className="relative bg-obsidian min-h-screen overflow-x-hidden selection:bg-gold/30 selection:text-gold-light">
-        {/* Dynamic Luminous Fluid Liquid Aurora Background */}
-        <LiquidAuroraBackground />
-
-        {/* ── Apple VisionOS Floating Liquid Dock Navbar ── */}
-        <AnimatePresence>
-          {!loading && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+      {/* Sophisticated Editorial Footer */}
+      <footer className="relative z-10 border-t border-porcelain/[0.09] px-5 sm:px-10 pt-12 pb-28 md:pb-12">
+        <div className="max-w-[1320px] mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
+          <div className="space-y-1.5">
+            <a
+              href="#home"
+              data-cursor="magnetic"
+              className="font-serif text-2xl font-light text-porcelain hover:text-champagne-pale transition-colors"
             >
-              <Navbar />
-              <MobileNav />
-            </motion.div>
-          )}
-        </AnimatePresence>
+              {profile.name}
+              <span className="text-champagne">.</span>
+            </a>
+            <p className="font-mono text-[11px] text-stone-dark">
+              {profile.role} · {profile.degree}
+            </p>
+          </div>
 
-        {/* ── Main Structured Sections ── */}
-        <main className="relative z-10 scroll-smooth">
-          {/* Hero: Spatial VisionOS Rig & Sem 6 Callout */}
-          <Hero heroReady={heroReady} />
+          <nav
+            aria-label="Footer Navigation"
+            className="flex flex-wrap items-center gap-x-6 gap-y-2 font-mono text-[11px] uppercase tracking-[0.16em] text-stone"
+          >
+            <a href="#work" data-cursor="magnetic" className="hover:text-porcelain transition-colors">
+              Work
+            </a>
+            <a href="#about" data-cursor="magnetic" className="hover:text-porcelain transition-colors">
+              About
+            </a>
+            <a href="#skills" data-cursor="magnetic" className="hover:text-porcelain transition-colors">
+              Toolkit
+            </a>
+            <a
+              href={profile.resumePath}
+              download={profile.resumeDownloadName}
+              data-cursor="magnetic"
+              className="hover:text-porcelain transition-colors"
+            >
+              Resume PDF
+            </a>
+            <a
+              href={profile.github}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-cursor="magnetic"
+              className="hover:text-porcelain transition-colors"
+            >
+              GitHub
+            </a>
+            <a
+              href={profile.linkedin}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-cursor="magnetic"
+              className="hover:text-porcelain transition-colors"
+            >
+              LinkedIn
+            </a>
+          </nav>
 
-          {/* Recruiter Fast-Track: Why Hire Ayush */}
-          <WhyHireMe />
-
-          {/* Interactive Developer Playground */}
-          <InteractiveTerminal />
-
-          {/* Flagship Production Systems */}
-          <FeaturedWork />
-
-          {/* Categorized Technical Arsenal */}
-          <Stack />
-
-          {/* Academic & Engineering Journey */}
-          <Timeline />
-
-          {/* Luxury Contact Suite */}
-          <Contact />
-        </main>
-
-        {/* ── High-Luxury Footer ── */}
-        <footer className="relative z-10 border-t border-white/[0.08] px-6 py-10 text-center text-xs text-white/40 font-mono space-y-2 pb-24 md:pb-10">
-          <p className="flex items-center justify-center gap-2">
-            <span>Designed & Engineered with Apple iOS & visionOS Liquid Glass Aesthetics</span>
+          <p className="font-mono text-[11px] text-stone-dark">
+            © {new Date().getFullYear()} {profile.name}
           </p>
-          <p className="text-white/20">
-            © {new Date().getFullYear()} Ayush Kavathiya — B.Tech Computer Science (Semester 6).
-          </p>
-        </footer>
-      </div>
-    </PerformanceProvider>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+export default function App() {
+  return (
+    <MotionConfig reducedMotion="user">
+      <PerformanceProvider>
+        <PortfolioShell />
+      </PerformanceProvider>
+    </MotionConfig>
   );
 }

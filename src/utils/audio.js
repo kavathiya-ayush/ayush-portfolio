@@ -1,11 +1,20 @@
 /**
- * Synthesizes subtle Apple-style tactile audio feedback using Web Audio API.
- * No external files, zero latency, runs entirely client-side.
+ * Optional, opt-in tactile audio feedback using Web Audio API.
+ * Strictly OFF by default — plays ONLY when the visitor enables sound explicitly.
  */
 let audioCtx = null;
+let soundEnabledState = false;
+
+export function setSoundEnabled(enabled) {
+  soundEnabledState = Boolean(enabled);
+}
+
+export function isSoundEnabled() {
+  return soundEnabledState;
+}
 
 export function playTactileClick(type = "light") {
-  if (typeof window === "undefined") return;
+  if (!soundEnabledState || typeof window === "undefined") return;
   try {
     if (!audioCtx) {
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -16,30 +25,28 @@ export function playTactileClick(type = "light") {
 
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
-
     osc.type = "sine";
 
     if (type === "light") {
-      osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(400, audioCtx.currentTime + 0.04);
-      gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.04);
+      osc.frequency.setValueAtTime(760, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(380, audioCtx.currentTime + 0.035);
+      gain.gain.setValueAtTime(0.03, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.035);
       osc.connect(gain);
       gain.connect(audioCtx.destination);
       osc.start();
-      osc.stop(audioCtx.currentTime + 0.04);
+      osc.stop(audioCtx.currentTime + 0.035);
     } else if (type === "success") {
       osc.frequency.setValueAtTime(520, audioCtx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.08);
-      gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+      osc.frequency.exponentialRampToValueAtTime(840, audioCtx.currentTime + 0.07);
+      gain.gain.setValueAtTime(0.045, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.07);
       osc.connect(gain);
       gain.connect(audioCtx.destination);
       osc.start();
-      osc.stop(audioCtx.currentTime + 0.08);
+      osc.stop(audioCtx.currentTime + 0.07);
     }
-  } catch (e) {
-    // Graceful fallback if audio is not allowed
+  } catch {
+    // Ignore audio context errors gracefully
   }
 }
-

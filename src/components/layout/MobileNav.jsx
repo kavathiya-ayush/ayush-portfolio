@@ -1,83 +1,86 @@
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Home, Briefcase, Terminal, Layers, Mail, Sparkles } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
+import { Home, Briefcase, Terminal, Layers, Mail } from "lucide-react";
+import { useActiveSection, useOverlayState } from "../../context/PerformanceContext";
 
-const navItems = [
+const dockItems = [
   { id: "home", icon: Home, label: "Home" },
   { id: "work", icon: Briefcase, label: "Work" },
   { id: "terminal", icon: Terminal, label: "CLI" },
-  { id: "skills", icon: Layers, label: "Stack" },
+  { id: "skills", icon: Layers, label: "Toolkit" },
   { id: "contact", icon: Mail, label: "Contact" },
 ];
 
 export default function MobileNav() {
-  const [activeSection, setActiveSection] = useState("home");
+  const activeSection = useActiveSection();
+  const { isProjectOverlayOpen } = useOverlayState();
+  const shouldReduceMotion = useReducedMotion();
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setActiveSection(entry.target.id);
-          }
-        });
-      },
-      {
-        root: null,
-        rootMargin: "-20% 0px -40% 0px",
-        threshold: 0.1,
-      }
-    );
-
-    navItems.forEach((item) => {
-      const el = document.getElementById(item.id);
-      if (el) observer.observe(el);
-    });
-
-    return () => observer.disconnect();
-  }, []);
-
-  const handleClick = (id) => {
+  const handleNavigate = (id) => {
     const el = document.getElementById(id);
     if (el) {
-      el.scrollIntoView({ behavior: "smooth" });
+      el.scrollIntoView({
+        behavior: shouldReduceMotion ? "auto" : "smooth",
+        block: "start",
+      });
     }
   };
 
   return (
-    <motion.div
-      initial={{ y: 50, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.5, delay: 0.2 }}
-      className="md:hidden fixed bottom-4 inset-x-4 z-[100]"
+    <motion.nav
+      initial={false}
+      animate={
+        isProjectOverlayOpen
+          ? { y: shouldReduceMotion ? 0 : 96, opacity: 0 }
+          : { y: 0, opacity: 1 }
+      }
+      transition={{
+        duration: shouldReduceMotion ? 0.14 : 0.34,
+        ease: [0.16, 1, 0.3, 1],
+      }}
+      aria-hidden={isProjectOverlayOpen || undefined}
+      aria-label="Mobile Navigation Dock"
+      className="md:hidden fixed bottom-3.5 inset-x-4 z-[100] pointer-events-none flex justify-center"
+      style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
     >
-      <div className="flex items-center justify-between gap-1 p-1.5 rounded-full liquid-glass-dock border border-white/10 shadow-2xl">
-        {navItems.map((item) => {
-          const isActive = activeSection === item.id;
+      <div
+        className={`liquid-glass-chrome w-full max-w-sm flex items-center justify-between gap-1 p-1.5 rounded-full ${
+          isProjectOverlayOpen ? "pointer-events-none" : "pointer-events-auto"
+        }`}
+      >
+        {dockItems.map((item) => {
+          const isActive =
+            activeSection === item.id ||
+            (item.id === "home" && activeSection === "about") ||
+            (item.id === "skills" && activeSection === "journey");
           const Icon = item.icon;
 
           return (
             <button
               key={item.id}
-              onClick={() => handleClick(item.id)}
-              className={`relative flex flex-col items-center justify-center flex-1 h-12 rounded-full transition-colors duration-300 ${
-                isActive ? "text-gold-light" : "text-white/40 hover:text-white/80"
+              type="button"
+              onClick={() => handleNavigate(item.id)}
+              aria-label={item.label}
+              aria-current={isActive ? "location" : undefined}
+              className={`relative flex flex-col items-center justify-center flex-1 h-12 rounded-full transition-colors duration-200 ${
+                isActive ? "text-champagne-light" : "text-stone hover:text-porcelain"
               }`}
             >
-              <Icon className="w-5 h-5 z-10" />
-              <span className="text-[9px] font-mono mt-0.5 z-10">{item.label}</span>
+              <Icon className="w-[18px] h-[18px] relative z-10" strokeWidth={1.75} />
+              <span className="text-[10.5px] font-mono tracking-wide mt-0.5 relative z-10">
+                {item.label}
+              </span>
 
               {isActive && (
-                <motion.div
-                  layoutId="activeTabMobile"
-                  className="absolute inset-0 bg-white/[0.08] rounded-full border border-gold/30 -z-10 shadow-glass-gold"
-                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                <motion.span
+                  layoutId={shouldReduceMotion ? undefined : "activeMobileDock"}
+                  className="absolute inset-0 rounded-full bg-porcelain/[0.09] border border-champagne/35 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]"
+                  transition={{ type: "spring", stiffness: 420, damping: 30 }}
                 />
               )}
             </button>
           );
         })}
       </div>
-    </motion.div>
+    </motion.nav>
   );
 }

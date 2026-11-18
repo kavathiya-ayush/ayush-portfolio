@@ -1,88 +1,89 @@
-import { motion } from "framer-motion";
-import { Sparkles, ArrowRight } from "lucide-react";
-import LiquidGlassCard from "../ui/LiquidGlassCard";
-import { whyHireMe } from "../../data/portfolio";
+import { motion, useReducedMotion } from "framer-motion";
+import { aboutPillars, profile } from "../../data/portfolio";
 
 export default function WhyHireMe() {
-  return (
-    <section className="relative px-6 py-16 lg:py-24 w-full">
-      <div className="max-w-6xl mx-auto">
-        {/* Section Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 25 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.6 }}
-          className="text-left mb-12 sm:mb-16"
-        >
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full liquid-glass border border-gold/25 text-xs font-mono text-gold-light mb-3">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Recruiter Fast-Track</span>
-          </div>
-          <h2 className="font-display text-3xl sm:text-5xl lg:text-6xl font-bold text-white tracking-tight leading-[1.08]">
-            Why Hire Ayush <br className="hidden sm:inline" />
-            <span className="text-white/30">as an Engineering Intern?</span>
-          </h2>
-          <p className="mt-4 text-sm sm:text-base text-white/50 max-w-xl">
-            A rapid overview of technical maturity, cross-platform adaptability, and commitment to shipping reliable code from day one.
-          </p>
-        </motion.div>
+  const shouldReduceMotion = useReducedMotion();
 
-        {/* 3 Pillars Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
-          {whyHireMe.map((item, idx) => {
-            const Icon = item.icon;
-            return (
-              <motion.div
-                key={item.title}
-                initial={{ opacity: 0, y: 35 }}
+  return (
+    <section
+      id="about"
+      className="relative px-5 sm:px-10 py-24 sm:py-32 lg:py-40 scroll-mt-24"
+    >
+      <div className="max-w-[1320px] mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+          {/* ── Left Sticky Editorial Column (5 cols) ── */}
+          <motion.div
+            initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ duration: shouldReduceMotion ? 0.2 : 0.7, ease: [0.16, 1, 0.3, 1] }}
+            className="lg:col-span-5 lg:sticky lg:top-32 space-y-6"
+          >
+            <div className="flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.22em] text-champagne">
+              <span>01</span>
+              <span className="w-8 h-px bg-champagne/45" />
+              <span>Approach</span>
+            </div>
+
+            <h2 className="font-serif text-editorial-lg font-light text-porcelain">
+              Useful software <br />
+              <span className="italic text-champagne-pale">over surface demos.</span>
+            </h2>
+
+            <p className="text-sm sm:text-[15px] text-stone leading-[1.78] max-w-md font-light">
+              I focus on building dependable applications that address everyday
+              workflows—whether a browser chat tool, a relational blood bank or
+              banking system, or Python desktop software for Chartered Accountant
+              offices.
+            </p>
+
+            <div className="pt-2 border-t border-porcelain/[0.08] font-mono text-[11px] text-stone-dark space-y-1">
+              <p>{profile.degreeFull}</p>
+              <p className="text-champagne/80">
+                {profile.primarySkills.join(" · ")}
+              </p>
+            </div>
+          </motion.div>
+
+          {/* ── Right Matte Hairline Manifesto Index (7 cols) ── */}
+          <div className="lg:col-span-7 border-t border-porcelain/[0.12]">
+            {aboutPillars.map((pillar, idx) => (
+              <motion.article
+                key={pillar.index}
+                initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 18 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: 0.6, delay: idx * 0.12 }}
+                transition={{
+                  duration: shouldReduceMotion ? 0.2 : 0.6,
+                  delay: shouldReduceMotion ? 0 : idx * 0.08,
+                  ease: [0.16, 1, 0.3, 1],
+                }}
+                className="group relative py-8 sm:py-10 border-b border-porcelain/[0.1] transition-colors duration-300 hover:border-champagne/35"
               >
-                <LiquidGlassCard
-                  glowColor={item.color}
-                  className="p-6 sm:p-8 h-full flex flex-col justify-between"
-                >
-                  <div>
-                    {/* Top Metric & Icon Bar */}
-                    <div className="flex items-center justify-between mb-6">
-                      <div className="p-3 rounded-xl bg-white/[0.04] border border-white/[0.08] text-gold-light">
-                        <Icon className="w-6 h-6" />
-                      </div>
-                      <div className="text-right">
-                        <span
-                          className={`font-display font-black text-2xl sm:text-3xl ${
-                            item.color === "gold" ? "text-gold-light" : "text-sapphire-light"
-                          }`}
-                        >
-                          {item.stat}
-                        </span>
-                        <p className="text-[10px] font-mono text-white/40 uppercase tracking-wider">
-                          {item.statLabel}
-                        </p>
-                      </div>
-                    </div>
+                <div className="grid grid-cols-1 sm:grid-cols-[56px_1fr] gap-4 sm:gap-6 items-baseline">
+                  <span className="font-mono text-xs tracking-[0.2em] text-champagne/75 group-hover:text-champagne-light transition-colors">
+                    {pillar.index}
+                  </span>
 
-                    <h3 className="font-display font-bold text-xl text-white mb-3 leading-snug">
-                      {item.title}
+                  <div className="space-y-3 transition-transform duration-500 ease-out group-hover:translate-x-1.5 motion-reduce:transform-none">
+                    <h3 className="font-serif text-2xl sm:text-3xl font-normal text-porcelain tracking-tight group-hover:text-champagne-pale transition-colors">
+                      {pillar.title}
                     </h3>
-                    <p className="text-sm text-white/60 leading-relaxed">
-                      {item.description}
+
+                    <p className="text-sm text-stone leading-[1.75] max-w-xl font-light">
+                      {pillar.summary}
+                    </p>
+
+                    <p className="pt-1 font-mono text-[11px] tracking-[0.08em] text-stone-dark group-hover:text-champagne/80 transition-colors">
+                      {pillar.focus}
                     </p>
                   </div>
-
-                  <div className="mt-8 pt-4 border-t border-white/[0.06] flex items-center gap-1.5 text-xs font-mono text-white/40 group-hover:text-gold-light transition-colors">
-                    <span>Verified in projects</span>
-                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                  </div>
-                </LiquidGlassCard>
-              </motion.div>
-            );
-          })}
+                </div>
+              </motion.article>
+            ))}
+          </div>
         </div>
       </div>
     </section>
   );
 }
-
